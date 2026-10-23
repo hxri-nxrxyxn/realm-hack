@@ -27,6 +27,7 @@ export default function App() {
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const lastAutoSentRef = useRef<{ number: string; time: number } | null>(null);
 
   // Function to send SMS
   const sendSmsMessage = async (targetNumber: string, content: string, isAutomated = false) => {
@@ -121,6 +122,18 @@ export default function App() {
             if (data.type === 'CALL_DETECTED' && data.number) {
               const incomingNumber = data.number;
               setPhoneNumber(incomingNumber);
+
+              const now = Date.now();
+              if (
+                lastAutoSentRef.current &&
+                lastAutoSentRef.current.number === incomingNumber &&
+                now - lastAutoSentRef.current.time < 15000
+              ) {
+                console.log('Debounced: Ignoring duplicate CALL_DETECTED within 15s');
+                return;
+              }
+
+              lastAutoSentRef.current = { number: incomingNumber, time: now };
 
               // Auto-send SMS if enabled
               if (autoSend) {

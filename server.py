@@ -46,6 +46,8 @@ class CallServer:
         self.loop = None
         self.service_name = "org.pipewire.Telephony"
         self.last_detected_number = None
+        self.last_call_time = 0
+        self.last_call_number = None
 
     async def broadcast(self, payload):
         """Send JSON message to all connected phone clients."""
@@ -72,6 +74,15 @@ class CallServer:
         if not clean_num or clean_num == "Unknown":
             clean_num = "9995283835"
 
+        import time
+        now = time.time()
+        # Deduplicate triggers for the same number within 15 seconds
+        if self.last_call_number == clean_num and (now - self.last_call_time) < 15:
+            print(f"[{format_timestamp()}] ⏳ Debounced: Duplicate trigger for {clean_num} ignored ({now - self.last_call_time:.1f}s since last)")
+            return
+
+        self.last_call_time = now
+        self.last_call_number = clean_num
         self.last_detected_number = clean_num
         print("\n" + "=" * 60)
         print(f"[{format_timestamp()}] 📞 NEW CALL EXTRACTED FROM BLUETOOTH HANDSFREE")
@@ -173,13 +184,6 @@ class CallServer:
             on_call_added,
             signal_name="CallAdded",
             dbus_interface="org.ofono.VoiceCallManager",
-            bus_name=self.service_name
-        )
-
-        bus.add_signal_receiver(
-            on_interfaces_added,
-            signal_name="InterfacesAdded",
-            dbus_interface="org.freedesktop.DBus.ObjectManager",
             bus_name=self.service_name
         )
 
