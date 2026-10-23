@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+@layer base {
+	:root {
+		--background: 240 10% 3.9%;
+		--foreground: 0 0% 98%;
+		--card: 240 10% 6.5%;
+		--card-foreground: 0 0% 98%;
+		--popover: 240 10% 6.5%;
+		--popover-foreground: 0 0% 98%;
+		--primary: 217 91% 60%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 240 4% 13%;
+		--secondary-foreground: 0 0% 98%;
+		--muted: 240 4% 16%;
+		--muted-foreground: 240 5% 68%;
+		--accent: 240 4% 16%;
+		--accent-foreground: 0 0% 98%;
+		--destructive: 0 72% 51%;
+		--destructive-foreground: 0 0% 100%;
+		--border: 240 4% 18%;
+		--input: 240 4% 18%;
+		--ring: 217 91% 60%;
+		--radius: 1rem;
+	}
+}
+
+@theme {
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+	--radius-xl: var(--radius);
+	--radius-lg: calc(var(--radius) - 2px);
+	--radius-md: calc(var(--radius) - 4px);
+	--radius-sm: calc(var(--radius) - 6px);
+}
+
+html, body {
+	background-color: hsl(var(--background));
+	color: hsl(var(--foreground));
+	font-feature-settings: "rlig" 1, "calt" 1;
+	min-height: 100%;
+	margin: 0;
+	padding: 0;
+	-webkit-tap-highlight-color: transparent;
+	overscroll-behavior-y: none;
+	touch-action: manipulation;
+}
+
+/* Safe area padding utilities */
+.pt-safe {
+	padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.pb-safe {
+	padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.pb-bottom-bar {
+	padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: hsl(var(--muted));
+	border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: hsl(var(--muted-foreground));
+}

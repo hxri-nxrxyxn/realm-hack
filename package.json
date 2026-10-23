@@ -1,0 +1,16 @@
+{
+  "name": "rakshak-net-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rakshak Sensors - Live Pedometer, Gyroscope, Magnetometer, Accelerometer, Ambient Light Sensor app with Capacitor, Android Studio, Svelte 5 and shadcn-svelte",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build": "npm run build:frontend && npm run build:backend",
+    "sync:android": "cd frontend && npm run build && npx cap sync android",
+    "build:android": "cd frontend && npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "open:android": "cd frontend && npx cap open android"
+  }
+}
