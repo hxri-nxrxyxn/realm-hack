@@ -1,51 +1,77 @@
 # realm-hack
 
-Monorepo / project workspace for the hackathon.
+Monorepo workspace organized into three core architecture components: **Client (App)**, **Gateway (App)**, and **Server**.
 
-## Projects
+```
+realm-hack/
+├── client/                     # Client application (Phone A / user-facing)
+│   ├── src/                    # Rakshak Sensors Svelte 5 & Capacitor app
+│   ├── android/                # Native Android build for Rakshak Sensors
+│   └── sample_app/             # SMS receiver & user-facing phone interface
+├── gateway/                    # Gateway application (Phone B / RakshaNet)
+│   ├── src/                    # Quick-dial & Bluetooth handsfree call responder
+│   ├── android/                # Native Android build for RakshaNet
+│   └── RakshaNet.apk           # Prebuilt APK
+└── server/                     # Server backend, microservices, and listeners
+    ├── backend/                # Node.js/TypeScript telemetry ingestion & WebSocket server
+    ├── services/               # Microservices (e.g., Malayalam TTS via Piper)
+    ├── server.py               # PipeWire Bluetooth call monitor & WebSocket broadcaster
+    └── extract_call_number.py  # D-Bus telephony phone number extractor CLI
+```
 
-### 1. Rakshak Sensors (`frontend/` & `backend/`)
-A real-time hardware sensor detection application and telemetry platform built with **Capacitor 7**, **Android Studio**, **Svelte 5 (Runes mode)**, and **shadcn-svelte**.
+---
 
-The app tracks and renders live telemetry for **5 physical hardware sensors**:
-1. **Pedometer**: Step counter, step detector, estimated walking distance (km), and calories burned (kcal).
-2. **Gyroscope**: 3-axis angular velocity ($\text{rad/s}$ and $\text{deg/s}$) across Pitch (X), Roll (Y), and Yaw (Z).
-3. **Magnetometer**: Geomagnetic field strength ($\mu\text{T}$), microtesla flux along X, Y, Z, and dynamic 360° rotating digital compass with cardinal directions (N, NE, E, SE, S, SW, W, NW).
-4. **Accelerometer**: 3-axis linear and gravity acceleration ($m/s^2$), total G-force magnitude, and dynamic force meters.
-5. **Ambient Light Sensor**: Real-time illuminance in Lux ($\text{lx}$) with environment classification (Dark, Indoor, Office, Daylight, Direct Sunlight).
+## Components
 
-#### Architecture
-- **Front Page (`/`)**: Displays Compass, Pedometer, and Light Meter directly below the enlarged menu bar, plus an interactive 4×1 preview matrix linking to the full suite.
-- **Full Suite Route (`/sensors`)**: Dedicated page with all 5 hardware sensors and hardware diagnostic details.
-- **Backend Service (`backend/`)**: Real-time telemetry ingestion, WebSocket broadcast (`ws://localhost:3001/ws`), and threshold anomaly alert engine.
-- **Single Master Control**: One high-visibility "Start Sensors" / "Stop Sensors" button at the end of each view.
+### 1. Client (`client/`)
+Real-time hardware sensor detection and user-facing mobile client built with **Capacitor 7**, **Android Studio**, and **Svelte 5 (Runes mode)**.
+- Tracks 5 hardware sensors (Pedometer, Gyroscope, Magnetometer/Compass, Accelerometer, Ambient Light).
+- Sends emergency alerts and sensor telemetry via SMS.
+- Houses [`client/sample_app/`](client/sample_app) for SMS reception and default SMS role handling.
 
 ```bash
-# Run sensor frontend (web preview)
-npm run dev:frontend
+# Run client app (web preview)
+npm run dev:client
 
-# Run telemetry backend
-npm run dev:backend
+# Sync assets to Capacitor Android
+npm run sync:android
 
-# Open sensor Android project in Android Studio
+# Open in Android Studio / Build APK
 npm run open:android
-
-# Build sensor Android APK
 npm run build:android
 ```
 
 ---
 
-### 2. RakshaNet (`rakshanet/`)
-Capacitor quick-dial mobile & web app featuring a custom phone dialer with placeholder `9995283835` and one-tap calling / Bluetooth handsfree integration.
+### 2. Gateway (`gateway/`)
+Capacitor mobile application for quick-dialing and automated Bluetooth hands-free call responses.
+- Listens to call detection events over WebSockets from the telephony server.
+- Triggers automatic SMS dispatches to callers.
 
 ```bash
 # Start development server
-npm run dev
+npm run dev:gateway
 
 # Sync assets to Capacitor Android
 npm run cap:sync
 
 # Open in Android Studio
 npm run cap:open
+```
+
+---
+
+### 3. Server (`server/`)
+Hosts telemetry processing, microservices, and Bluetooth telephony integrations:
+- **`server/backend/`**: Node.js/TypeScript server with WebSocket streaming (`/ws`) and threshold alert engine.
+- **`server/services/malayalam-tts/`**: Dockerized Malayalam Text-to-Speech service using Piper.
+- **`server/server.py`**: Real-time Linux PipeWire / oFono D-Bus call monitor broadcasting detected caller IDs.
+- **`server/extract_call_number.py`**: CLI utility for PipeWire telephony inspection.
+
+```bash
+# Run telemetry server backend
+npm run dev:server
+
+# Run Bluetooth call WebSocket monitor
+python3 server/server.py
 ```
