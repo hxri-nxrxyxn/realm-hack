@@ -28,7 +28,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  border-radius: 0 !important; /* Strict: NO rounded pills */
+  border-radius: 0 !important;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -38,6 +38,7 @@ html, body {
   background-color: var(--bg-page);
   color: var(--text-bright);
   font-family: 'IBM Plex Mono', monospace;
+  text-transform: lowercase;
 }
 
 body {
@@ -106,16 +107,16 @@ body {
 .brand-title {
   font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
   color: var(--text-bright);
 }
 
 .brand-sub {
   font-size: 0.7rem;
   font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   color: var(--text-dim);
 }
 
@@ -126,7 +127,8 @@ body {
   font-family: inherit;
   font-size: 0.7rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   padding: 0.35rem 0.6rem;
   cursor: pointer;
   transition: all 0.1s ease;
@@ -147,7 +149,8 @@ body {
   background: #000000;
   border: 1px solid var(--border-dim);
   font-size: 0.7rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
 }
 
 .status-badge {
@@ -155,6 +158,7 @@ body {
   align-items: center;
   gap: 0.4rem;
   font-weight: 600;
+  text-transform: lowercase;
 }
 
 .status-badge.online {
@@ -167,6 +171,7 @@ body {
 
 .status-endpoint {
   color: var(--text-mid);
+  text-transform: lowercase;
 }
 
 /* Settings Drawer */
@@ -177,6 +182,7 @@ body {
   padding: 0.85rem;
   background: #000000;
   border: 1px solid var(--border-mid);
+  text-transform: lowercase;
 }
 
 .config-input-group {
@@ -193,6 +199,7 @@ body {
   font-size: 0.75rem;
   padding: 0.45rem 0.6rem;
   outline: none;
+  text-transform: lowercase;
 }
 
 .config-input:focus {
@@ -208,7 +215,8 @@ body {
   font-weight: 600;
   padding: 0.45rem 0.75rem;
   cursor: pointer;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
 }
 
 /* Controls & Form */
@@ -216,6 +224,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  text-transform: lowercase;
 }
 
 /* Checkbox Toggle */
@@ -226,6 +235,7 @@ body {
   cursor: pointer;
   user-select: none;
   padding: 0.4rem 0;
+  text-transform: lowercase;
 }
 
 .raw-checkbox {
@@ -255,8 +265,8 @@ body {
 
 .control-label {
   font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   color: var(--text-mid);
 }
 
@@ -265,6 +275,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  text-transform: lowercase;
 }
 
 .field-meta-row {
@@ -276,14 +287,15 @@ body {
 .field-label {
   font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
   color: var(--text-mid);
 }
 
 .field-meta {
   font-size: 0.65rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   color: var(--text-dim);
 }
 
@@ -293,8 +305,8 @@ body {
   color: var(--text-dim);
   font-family: inherit;
   font-size: 0.65rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   cursor: pointer;
   padding: 0;
 }
@@ -311,9 +323,10 @@ body {
   font-family: inherit;
   font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   padding: 0.65rem 0.75rem;
   outline: none;
+  text-transform: lowercase;
   transition: border-color 0.1s ease;
 }
 
@@ -323,6 +336,7 @@ body {
 
 .tech-input::placeholder {
   color: var(--text-dim);
+  text-transform: lowercase;
 }
 
 .tech-textarea {
@@ -337,6 +351,7 @@ body {
   padding: 0.65rem 0.75rem;
   outline: none;
   resize: none;
+  text-transform: lowercase;
   transition: border-color 0.1s ease;
 }
 
@@ -346,6 +361,7 @@ body {
 
 .tech-textarea::placeholder {
   color: var(--text-dim);
+  text-transform: lowercase;
 }
 
 /* Primary Action Button */
@@ -358,8 +374,8 @@ body {
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
   cursor: pointer;
   transition: all 0.1s ease;
 }
@@ -383,8 +399,9 @@ body {
   border: 1px solid var(--border-mid);
   background: #000000;
   font-size: 0.72rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   line-height: 1.4;
+  text-transform: lowercase;
 }
 
 .status-banner.success {
@@ -405,8 +422,8 @@ body {
   padding-top: 1rem;
   border-top: 1px solid var(--border-dim);
   font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
   color: var(--text-dim);
 }
 

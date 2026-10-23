@@ -10,7 +10,7 @@
 
   const defaultPlaceholder = '9995283835';
   const defaultServerUrl = 'ws://192.168.2.38:8765';
-  const defaultMessage = 'Alert: Automated response from RakshaNet. Received your call!';
+  const defaultMessage = 'alert: automated response from rakshanet. received your call!';
 
   let phoneNumber = $state('');
   let message = $state(defaultMessage);
@@ -32,11 +32,11 @@
     const messageContent = content.trim();
 
     if (!sanitizedNumber) {
-      statusMessage = { text: 'ERROR: Target recipient number is invalid.', type: 'error' };
+      statusMessage = { text: 'error: target recipient number is invalid.', type: 'error' };
       return;
     }
     if (!messageContent) {
-      statusMessage = { text: 'ERROR: Message payload cannot be empty.', type: 'error' };
+      statusMessage = { text: 'error: message payload cannot be empty.', type: 'error' };
       return;
     }
 
@@ -52,8 +52,8 @@
 
         statusMessage = {
           text: isAutomated
-            ? `AUTO-DISPATCH CONFIRMED: SMS transmitted to ${rawNumber}`
-            : `TRANSMISSION CONFIRMED: SMS dispatched to ${rawNumber}`,
+            ? `auto-dispatch confirmed: sms transmitted to ${rawNumber}`
+            : `transmission confirmed: sms dispatched to ${rawNumber}`,
           type: 'success'
         };
 
@@ -68,14 +68,14 @@
       } catch (err: unknown) {
         console.error('Direct SMS error:', err);
         const errorMsg = err instanceof Error ? err.message : String(err);
-        statusMessage = { text: `TRANSMISSION FAILED: ${errorMsg}`, type: 'error' };
+        statusMessage = { text: `transmission failed: ${errorMsg.toLowerCase()}`, type: 'error' };
       } finally {
         isSending = false;
       }
     } else {
       try {
         window.location.href = `sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`;
-        statusMessage = { text: `WEB INTENT OPENED FOR ${rawNumber}`, type: 'success' };
+        statusMessage = { text: `web intent opened for ${rawNumber}`, type: 'success' };
       } catch (err) {
         console.error('Web SMS error:', err);
         window.open(`sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`, '_system');
@@ -121,7 +121,7 @@
               sendSmsMessage(incomingNumber, message, true);
             } else {
               statusMessage = {
-                text: `CALL DETECTED: ${incomingNumber}. Ready for manual dispatch.`,
+                text: `call detected: ${incomingNumber}. ready for manual dispatch.`,
                 type: 'success'
               };
             }
@@ -189,23 +189,23 @@
     <header class="panel-header">
       <div class="header-top">
         <div class="brand-section">
-          <h1 class="brand-title">RAKSHANET</h1>
-          <span class="brand-sub">TELEPHONY CONTROLLER // BLUEZ HFP</span>
+          <h1 class="brand-title">rakshanet</h1>
+          <span class="brand-sub">telephony controller // bluez hfp</span>
         </div>
         <button
           type="button"
           class="header-action-btn"
           onclick={() => (showSettings = !showSettings)}
-          aria-label="Toggle Configuration"
+          aria-label="toggle configuration"
         >
-          {showSettings ? '[CLOSE]' : '[CONFIG]'}
+          {showSettings ? '[close]' : '[config]'}
         </button>
       </div>
 
       <!-- Network Status Bar -->
       <div class="status-bar">
         <span class="status-badge {wsConnected ? 'online' : 'offline'}">
-          STATUS: {wsConnected ? 'ONLINE' : 'CONNECTING'}
+          status: {wsConnected ? 'online' : 'connecting'}
         </span>
         <span class="status-endpoint">
           {serverUrl.replace('ws://', '')}
@@ -216,7 +216,7 @@
     <!-- Configuration Drawer -->
     {#if showSettings}
       <form onsubmit={handleSaveSettings} class="config-drawer">
-        <label class="field-label" for="ws-input">WEBSOCKET ENDPOINT</label>
+        <label class="field-label" for="ws-input">websocket endpoint</label>
         <div class="config-input-group">
           <input
             id="ws-input"
@@ -226,7 +226,7 @@
             class="config-input"
           />
           <button type="submit" class="config-submit-btn">
-            APPLY
+            apply
           </button>
         </div>
       </form>
@@ -243,16 +243,16 @@
           class="raw-checkbox"
         />
         <span class="control-label">
-          AUTO-DISPATCH SMS ON INCOMING CALL
+          auto-dispatch sms on incoming call
         </span>
       </label>
 
       <!-- Target Recipient Number -->
       <div class="field-group">
         <div class="field-meta-row">
-          <label class="field-label" for="phone-input">RECIPIENT NUMBER</label>
+          <label class="field-label" for="phone-input">recipient number</label>
           <button type="button" class="field-text-btn" onclick={resetNumber}>
-            [RESET]
+            [reset]
           </button>
         </div>
         <input
@@ -264,24 +264,24 @@
           oninput={() => (statusMessage = null)}
           placeholder={defaultPlaceholder}
           class="tech-input"
-          aria-label="Recipient Number"
+          aria-label="recipient number"
         />
       </div>
 
       <!-- Message Payload -->
       <div class="field-group">
         <div class="field-meta-row">
-          <label class="field-label" for="message-input">MESSAGE PAYLOAD</label>
-          <span class="field-meta">{message.length} BYTES</span>
+          <label class="field-label" for="message-input">message payload</label>
+          <span class="field-meta">{message.length} bytes</span>
         </div>
         <textarea
           id="message-input"
           rows={3}
           bind:value={message}
           oninput={() => (statusMessage = null)}
-          placeholder="Enter message text..."
+          placeholder="enter message text..."
           class="tech-textarea"
-          aria-label="Message Payload"
+          aria-label="message payload"
         ></textarea>
       </div>
 
@@ -292,7 +292,7 @@
         class="submit-btn"
         disabled={isSending}
       >
-        {isSending ? 'TRANSMITTING...' : 'DISPATCH SMS'}
+        {isSending ? 'transmitting...' : 'dispatch sms'}
       </button>
     </form>
 
@@ -306,12 +306,12 @@
     <!-- Telemetry Footer -->
     <footer class="panel-footer">
       <div class="footer-line">
-        <span>DAEMON: PIPEWIRE</span>
-        <span>HFP: ACTIVE</span>
+        <span>daemon: pipewire</span>
+        <span>hfp: active</span>
       </div>
       <div class="footer-line">
-        <span>DEBOUNCE: 15 SECONDS</span>
-        <span>LINK: LOCAL WS</span>
+        <span>debounce: 15 seconds</span>
+        <span>link: local ws</span>
       </div>
     </footer>
   </main>
