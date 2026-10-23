@@ -2,26 +2,14 @@
   "name": "realm-hack",
   "version": "1.0.0",
   "private": true,
-  "description": "Monorepo workspace for realm-hack: client (app), gateway (app), and server",
+  "description": "Monorepo workspace for realm-hack: client, gateway, and server",
   "scripts": {
     "dev:client": "npm --prefix client run dev",
     "dev:gateway": "npm --prefix gateway run dev",
     "dev:server": "npm --prefix server/backend run dev",
-    "dev:frontend": "npm run dev:client",
-    "dev:backend": "npm run dev:server",
     "build:client": "npm --prefix client run build",
     "build:gateway": "npm --prefix gateway run build",
     "build:server": "npm --prefix server/backend run build",
-    "build:frontend": "npm run build:client",
-    "build:backend": "npm run build:server",
-    "build": "npm run build:client && npm run build:server",
-    "sync:android": "cd client && npm run build && npx cap sync android",
-    "build:android": "cd client && npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
-    "open:android": "cd client && npx cap open android",
-    "dev": "npm --prefix gateway run dev",
-    "preview": "npm --prefix gateway run preview",
-    "cap:sync": "npm --prefix gateway run cap:sync",
-    "cap:android": "npm --prefix gateway run cap:android",
-    "cap:open": "npm --prefix gateway run cap:open"
+    "build": "npm run build:client && npm run build:server"
   }
 }
