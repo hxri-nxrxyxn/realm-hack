@@ -1,74 +1,114 @@
 import React, { useState } from 'react';
-import { Phone, PhoneCall, Delete, Shield, Smartphone } from 'lucide-react';
+import { Send, MessageSquare, Shield, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
-interface DirectCallPlugin {
-  makeCall(options: { number: string }): Promise<void>;
+interface DirectSmsPlugin {
+  sendSms(options: { number: string; message: string }): Promise<void>;
 }
 
-const DirectCall = registerPlugin<DirectCallPlugin>('DirectCall');
+const DirectSms = registerPlugin<DirectSmsPlugin>('DirectSms');
+
+interface SentMessageItem {
+  id: string;
+  recipient: string;
+  text: string;
+  time: string;
+}
 
 export default function App() {
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [statusMessage, setStatusMessage] = useState<string>('');
   const defaultPlaceholder = '9995283835';
+  const defaultMessage = '🚨 Alert: Need immediate assistance from RakshaNet!';
 
-  const handleCall = async (e?: React.FormEvent) => {
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [message, setMessage] = useState<string>(defaultMessage);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const [sentHistory, setSentHistory] = useState<SentMessageItem[]>([]);
+
+  const quickTemplates = [
+    '🚨 Alert: Need immediate assistance!',
+    '📍 Sharing status: Please contact me urgently.',
+    '✅ Update: I have reached safely.',
+    '📞 Please call me back as soon as possible.',
+  ];
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    // Use entered number, or fallback to placeholder default
     const rawNumber = phoneNumber.trim() || defaultPlaceholder;
-    // Clean string to retain digits and dialing symbols (+, #, *)
-    const sanitized = rawNumber.replace(/[^0-9+*#]/g, '');
+    const sanitizedNumber = rawNumber.replace(/[^0-9+*#]/g, '');
+    const messageContent = message.trim() || defaultMessage;
 
-    if (!sanitized) {
-      setStatusMessage('Please enter a valid phone number');
+    if (!sanitizedNumber) {
+      setStatusMessage({ text: 'Please enter a valid phone number', type: 'error' });
       return;
     }
 
-    setStatusMessage(`Calling ${rawNumber}...`);
+    if (!messageContent) {
+      setStatusMessage({ text: 'Please enter a message to send', type: 'error' });
+      return;
+    }
+
+    setIsSending(true);
+    setStatusMessage({ text: `Sending SMS to ${rawNumber}...`, type: 'info' });
 
     if (Capacitor.isNativePlatform()) {
       try {
-        await DirectCall.makeCall({ number: sanitized });
-        setStatusMessage(`Direct call initiated to ${rawNumber}`);
+        await DirectSms.sendSms({
+          number: sanitizedNumber,
+          message: messageContent,
+        });
+
+        setStatusMessage({
+          text: `Message sent seamlessly to ${rawNumber}!`,
+          type: 'success',
+        });
+
+        const newEntry: SentMessageItem = {
+          id: Date.now().toString(),
+          recipient: rawNumber,
+          text: messageContent,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setSentHistory((prev) => [newEntry, ...prev.slice(0, 4)]);
       } catch (err: unknown) {
-        console.error('Direct call error:', err);
+        console.error('Direct SMS error:', err);
         const errorMsg = err instanceof Error ? err.message : String(err);
-        setStatusMessage(errorMsg || 'Permission denied or call failed');
+        setStatusMessage({
+          text: errorMsg || 'Failed to send SMS. Ensure SMS permission is granted.',
+          type: 'error',
+        });
+      } finally {
+        setIsSending(false);
       }
     } else {
-      // On web browser fallback to tel: protocol
+      // Browser fallback via sms: protocol
       try {
-        window.location.href = `tel:${sanitized}`;
+        window.location.href = `sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`;
+        setStatusMessage({
+          text: `SMS link opened for ${rawNumber}`,
+          type: 'success',
+        });
       } catch (err) {
-        console.error('Call launch error:', err);
-        window.open(`tel:${sanitized}`, '_system');
+        console.error('Web SMS error:', err);
+        window.open(`sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`, '_system');
+      } finally {
+        setIsSending(false);
       }
-      setTimeout(() => {
-        setStatusMessage(`Call initiated: ${rawNumber}`);
-      }, 1000);
     }
   };
 
-  const handleKeyPress = (val: string) => {
-    setPhoneNumber((prev) => prev + val);
-    setStatusMessage('');
-  };
-
-  const handleDelete = () => {
-    setPhoneNumber((prev) => prev.slice(0, -1));
-  };
-
-  const handleClear = () => {
+  const handleClearNumber = () => {
     setPhoneNumber('');
-    setStatusMessage('');
+    setStatusMessage(null);
   };
 
   const handleUsePlaceholder = () => {
     setPhoneNumber(defaultPlaceholder);
-    setStatusMessage('');
+    setStatusMessage(null);
   };
+
+  const targetNumberDisplay = phoneNumber.trim() || defaultPlaceholder;
 
   return (
     <div className="app-container">
@@ -77,9 +117,9 @@ export default function App() {
         <header className="app-header">
           <div className="logo-badge">
             <Shield className="shield-icon" size={26} />
-            <PhoneCall className="phone-icon-badge" size={16} />
+            <MessageSquare className="phone-icon-badge" size={16} />
           </div>
-          <h1 className="title">RakshaNet Dial</h1>
+          <h1 className="title">RakshaNet Messenger</h1>
           <p className="subtitle">
             Running on{' '}
             <span className="platform-tag">
@@ -89,122 +129,146 @@ export default function App() {
           </p>
         </header>
 
-        {/* Input Form */}
-        <form onSubmit={handleCall} className="dialer-form">
-          <div className="input-wrapper">
-            <input
-              id="phone-input"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={phoneNumber}
-              onChange={(e) => {
-                setPhoneNumber(e.target.value);
-                setStatusMessage('');
-              }}
-              placeholder={defaultPlaceholder}
-              className="phone-input"
-              aria-label="Phone Number"
-            />
-            {phoneNumber && (
+        {/* Messaging Form */}
+        <form onSubmit={handleSendMessage} className="dialer-form">
+          {/* Recipient Input Box */}
+          <div className="form-group">
+            <label className="field-label" htmlFor="phone-input">
+              Recipient Phone Number
+            </label>
+            <div className="input-wrapper">
+              <input
+                id="phone-input"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phoneNumber}
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  setStatusMessage(null);
+                }}
+                placeholder={defaultPlaceholder}
+                className="phone-input"
+                aria-label="Phone Number"
+              />
+              {phoneNumber && (
+                <button
+                  type="button"
+                  className="clear-icon-btn"
+                  onClick={handleClearNumber}
+                  aria-label="Clear number"
+                  title="Clear"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Quick preset hint */}
+            <div className="preset-row">
+              <span className="preset-label">Placeholder default: </span>
               <button
                 type="button"
-                className="clear-icon-btn"
-                onClick={handleClear}
-                aria-label="Clear input"
-                title="Clear"
+                className="preset-btn"
+                onClick={handleUsePlaceholder}
               >
-                ✕
+                {defaultPlaceholder}
               </button>
-            )}
+            </div>
           </div>
 
-          {/* Quick preset hint */}
-          <div className="preset-row">
-            <span className="preset-label">Default: </span>
-            <button
-              type="button"
-              className="preset-btn"
-              onClick={handleUsePlaceholder}
-            >
-              {defaultPlaceholder}
-            </button>
+          {/* Message Text Input */}
+          <div className="form-group">
+            <div className="label-with-clear">
+              <label className="field-label" htmlFor="message-input">
+                Message Content
+              </label>
+              {message && (
+                <button
+                  type="button"
+                  className="preset-btn text-xs"
+                  onClick={() => setMessage('')}
+                >
+                  Clear text
+                </button>
+              )}
+            </div>
+            <textarea
+              id="message-input"
+              rows={3}
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setStatusMessage(null);
+              }}
+              placeholder="Type your message here..."
+              className="message-textarea"
+            />
           </div>
 
-          {/* Call Action Button */}
+          {/* Quick Message Templates */}
+          <div className="templates-section">
+            <span className="templates-label">Quick Templates:</span>
+            <div className="templates-grid">
+              {quickTemplates.map((template, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`template-chip ${message === template ? 'active' : ''}`}
+                  onClick={() => {
+                    setMessage(template);
+                    setStatusMessage(null);
+                  }}
+                >
+                  {template}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Send SMS Action Button */}
           <button
             type="submit"
-            id="call-button"
-            className="call-btn"
-            aria-label="Call Number"
+            id="send-button"
+            className="call-btn send-btn"
+            disabled={isSending}
+            aria-label="Send SMS"
           >
             <div className="call-btn-inner">
               <div className="call-icon-circle">
-                <Phone size={24} className="call-icon" />
+                <Send size={20} className={isSending ? 'anim-spin' : ''} />
               </div>
               <span className="call-text">
-                Call {phoneNumber.trim() ? phoneNumber.trim() : defaultPlaceholder}
+                {isSending ? 'Sending Seamlessly...' : `Send Message to ${targetNumberDisplay}`}
               </span>
             </div>
           </button>
         </form>
 
-        {/* Keypad */}
-        <div className="keypad-grid">
-          {[
-            { num: '1', sub: '' },
-            { num: '2', sub: 'ABC' },
-            { num: '3', sub: 'DEF' },
-            { num: '4', sub: 'GHI' },
-            { num: '5', sub: 'JKL' },
-            { num: '6', sub: 'MNO' },
-            { num: '7', sub: 'PQRS' },
-            { num: '8', sub: 'TUV' },
-            { num: '9', sub: 'WXYZ' },
-            { num: '*', sub: '' },
-            { num: '0', sub: '+' },
-            { num: '#', sub: '' },
-          ].map((item) => (
-            <button
-              key={item.num}
-              type="button"
-              className="keypad-key"
-              onClick={() => handleKeyPress(item.num)}
-            >
-              <span className="key-num">{item.num}</span>
-              {item.sub && <span className="key-sub">{item.sub}</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* Keypad controls */}
-        <div className="keypad-actions">
-          <button
-            type="button"
-            className="action-btn backspace-btn"
-            onClick={handleDelete}
-            disabled={!phoneNumber}
-            aria-label="Backspace"
-          >
-            <Delete size={20} />
-            <span>Delete</span>
-          </button>
-
-          <button
-            type="button"
-            className="action-btn clear-all-btn"
-            onClick={handleClear}
-            disabled={!phoneNumber}
-            aria-label="Clear all"
-          >
-            Clear
-          </button>
-        </div>
-
         {/* Status notification */}
         {statusMessage && (
-          <div className="status-toast" role="status">
-            {statusMessage}
+          <div className={`status-toast ${statusMessage.type}`} role="status">
+            {statusMessage.type === 'success' && <CheckCircle2 size={16} />}
+            {statusMessage.type === 'error' && <AlertCircle size={16} />}
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
+
+        {/* Sent History */}
+        {sentHistory.length > 0 && (
+          <div className="history-section">
+            <h2 className="history-title">Recently Sent</h2>
+            <div className="history-list">
+              {sentHistory.map((item) => (
+                <div key={item.id} className="history-card">
+                  <div className="history-header">
+                    <span className="history-recipient">To: {item.recipient}</span>
+                    <span className="history-time">{item.time}</span>
+                  </div>
+                  <p className="history-text">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>
