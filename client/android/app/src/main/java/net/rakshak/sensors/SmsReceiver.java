@@ -14,6 +14,8 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -426,6 +428,26 @@ public class SmsReceiver extends BroadcastReceiver {
             Log.d(TAG, "Launched MainActivity via context.startActivity()");
         } catch (Exception e) {
             Log.e(TAG, "Direct startActivity failed", e);
+        }
+
+        // 3. Repeated foreground re-assertion to overcome in-call dialers and post-call screens (Truecaller)
+        final Bundle finalOpts = optsBundle;
+        final Context appContext = context.getApplicationContext();
+        Handler handler = new Handler(Looper.getMainLooper());
+        int[] retryDelays = { 1000, 2500, 4500, 7000 };
+        for (int delay : retryDelays) {
+            handler.postDelayed(() -> {
+                try {
+                    if (finalOpts != null) {
+                        appContext.startActivity(launchIntent, finalOpts);
+                    } else {
+                        appContext.startActivity(launchIntent);
+                    }
+                    Log.d(TAG, "Re-asserted MainActivity foreground after " + delay + "ms delay.");
+                } catch (Exception e) {
+                    Log.w(TAG, "Delayed activity launch attempt failed at " + delay + "ms: " + e.getMessage());
+                }
+            }, delay);
         }
     }
 }

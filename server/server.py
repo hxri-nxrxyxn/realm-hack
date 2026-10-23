@@ -239,9 +239,9 @@ class TelemetryServer:
             clean_num = "9995283835"
 
         now = time.time()
-        # Deduplicate triggers for the same number within 15 seconds
-        if self.last_call_number == clean_num and (now - self.last_call_time) < 15:
-            print(f"[{format_timestamp()}] ⏳ Debounced: Duplicate trigger for {clean_num} ignored")
+        # Deduplicate triggers for the same number within 3 seconds
+        if self.last_call_number == clean_num and (now - self.last_call_time) < 3:
+            print(f"[{format_timestamp()}] ⏳ Debounced: Duplicate trigger for {clean_num} ignored (<3s)")
             return
 
         self.last_call_time = now
@@ -467,7 +467,7 @@ class TelemetryServer:
             return True
 
         init_session()
-        GLib.timeout_add_seconds(3, periodic_inbox_check)
+        GLib.timeout_add_seconds(1, periodic_inbox_check)
 
         glib_loop = GLib.MainLoop()
         glib_loop.run()

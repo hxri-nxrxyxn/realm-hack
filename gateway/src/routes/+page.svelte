@@ -108,8 +108,8 @@
             phoneNumber = incomingNumber;
 
             const now = Date.now();
-            if (lastAutoSent && lastAutoSent.number === incomingNumber && now - lastAutoSent.time < 15000) {
-              console.log('Debounced duplicate CALL_DETECTED within 15s');
+            if (lastAutoSent && lastAutoSent.number === incomingNumber && now - lastAutoSent.time < 3000) {
+              console.log('Debounced duplicate CALL_DETECTED within 3s');
               return;
             }
 
