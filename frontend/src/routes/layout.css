@@ -54,7 +54,7 @@
 html, body {
 	background-color: hsl(var(--background));
 	color: hsl(var(--foreground));
-	font-feature-settings: "rlig" 1, "calt" 1;
+	font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
 	min-height: 100%;
 	margin: 0;
 	padding: 0;

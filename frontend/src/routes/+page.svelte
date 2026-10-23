@@ -42,7 +42,7 @@
 				<div class="min-w-0">
 					<div class="flex items-center gap-2.5 flex-wrap">
 						<h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight truncate">Rakshak Sensors</h1>
-						<span class="text-xs font-mono font-semibold text-emerald-400">
+						<span class="text-xs font-semibold text-emerald-400">
 							{sensorManager.isNative ? "Android" : "Web Preview"}
 						</span>
 					</div>
@@ -54,7 +54,7 @@
 
 			<!-- Live Frequency Display in Menu Bar -->
 			<div class="flex items-center shrink-0">
-				<div class="flex items-baseline gap-1 font-mono text-right">
+				<div class="flex items-baseline gap-1 text-right">
 					<span class="text-2xl sm:text-3xl font-black text-emerald-400">
 						{sensorManager.isListening ? sensorManager.updateRateHz : 0}
 					</span>
@@ -129,7 +129,7 @@
 					<div class="flex flex-col items-center">
 						<Activity class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[11px] font-bold text-foreground truncate w-full">Accel</div>
-						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-semibold truncate w-full">
 							{sensorManager.accelerometer.magnitude.toFixed(1)} m/s²
 						</div>
 					</div>
@@ -138,7 +138,7 @@
 					<div class="flex flex-col items-center">
 						<Compass class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[11px] font-bold text-foreground truncate w-full">Gyro</div>
-						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-semibold truncate w-full">
 							{sensorManager.gyroscope.rate.toFixed(1)} rad/s
 						</div>
 					</div>
@@ -147,7 +147,7 @@
 					<div class="flex flex-col items-center">
 						<Zap class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[11px] font-bold text-foreground truncate w-full">Compass</div>
-						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-semibold truncate w-full">
 							{Math.round(sensorManager.magnetometer.heading)}° {sensorManager.magnetometer.cardinal}
 						</div>
 					</div>
@@ -156,7 +156,7 @@
 					<div class="flex flex-col items-center">
 						<SunMedium class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[11px] font-bold text-foreground truncate w-full">Light</div>
-						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-semibold truncate w-full">
 							{Math.round(sensorManager.ambientLight.lux)} lx
 						</div>
 					</div>

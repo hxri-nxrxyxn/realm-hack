@@ -79,7 +79,7 @@
 					type="tel"
 					placeholder="Enter 10-digit phone number"
 					bind:value={phoneNumber}
-					class="h-11 rounded-xl bg-secondary/50 border-border/70 text-foreground font-mono font-medium pl-3 pr-4 text-sm focus:border-primary"
+					class="h-11 rounded-xl bg-secondary/50 border-border/70 text-foreground font-medium pl-3 pr-4 text-sm focus:border-primary"
 				/>
 			</div>
 		</div>

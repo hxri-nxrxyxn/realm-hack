@@ -24,7 +24,7 @@
 				</div>
 			</div>
 
-			<div class="text-xs font-mono font-semibold {isSpinning ? 'text-emerald-400' : 'text-muted-foreground'}">
+			<div class="text-xs font-semibold {isSpinning ? 'text-emerald-400' : 'text-muted-foreground'}">
 				{isSpinning ? "Active Spin" : "Stationary"}
 			</div>
 		</div>
@@ -38,11 +38,11 @@
 					Angular Velocity Speed
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
+					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none">
 						{sensorManager.gyroscope.rate.toFixed(2)}
 					</span>
 					<span class="text-base font-semibold text-muted-foreground">rad/s</span>
-					<span class="text-xs font-bold font-mono text-emerald-400 ml-1">({degPerSec}°/s)</span>
+					<span class="text-xs font-bold text-emerald-400 ml-1">({degPerSec}°/s)</span>
 				</div>
 			</div>
 			<div class="flex justify-end sm:justify-start">
@@ -64,7 +64,7 @@
 					<RotateCw class="h-3.5 w-3.5" />
 					<span>Pitch (X)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.gyroscope.x > 0 ? "+" : ""}{sensorManager.gyroscope.x.toFixed(2)}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>
@@ -76,7 +76,7 @@
 					<RotateCcw class="h-3.5 w-3.5" />
 					<span>Roll (Y)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.gyroscope.y > 0 ? "+" : ""}{sensorManager.gyroscope.y.toFixed(2)}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>
@@ -88,7 +88,7 @@
 					<Compass class="h-3.5 w-3.5" />
 					<span>Yaw (Z)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.gyroscope.z > 0 ? "+" : ""}{sensorManager.gyroscope.z.toFixed(2)}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>

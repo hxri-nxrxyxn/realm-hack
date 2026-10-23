@@ -26,7 +26,7 @@
 				</div>
 			</div>
 
-			<div class="text-xs font-mono font-semibold text-emerald-400">
+			<div class="text-xs font-semibold text-emerald-400">
 				{sensorManager.ambientLight.environment}
 			</div>
 		</div>
@@ -40,7 +40,7 @@
 					Illuminance Flux
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
+					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none">
 						{Math.round(sensorManager.ambientLight.lux).toLocaleString()}
 					</span>
 					<span class="text-base font-semibold text-muted-foreground">lux</span>
@@ -61,7 +61,7 @@
 		<div class="space-y-2 pt-1">
 			<div class="flex justify-between items-center text-xs">
 				<span class="text-muted-foreground font-medium">Brightness Spectrum</span>
-				<span class="font-bold text-emerald-400 font-mono text-sm">{luxProgress}%</span>
+				<span class="font-bold text-emerald-400 text-sm">{luxProgress}%</span>
 			</div>
 			<Progress value={luxProgress} class="h-2.5 bg-secondary/80" />
 		</div>
@@ -73,7 +73,7 @@
 					<Moon class="h-3.5 w-3.5" />
 					<span>Night</span>
 				</div>
-				<div class="text-sm font-bold font-mono text-foreground">&lt;50 lx</div>
+				<div class="text-sm font-bold text-foreground">&lt;50 lx</div>
 				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux < 50 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux < 50 ? "Active" : "Inactive"}
 				</div>
@@ -84,7 +84,7 @@
 					<Building2 class="h-3.5 w-3.5" />
 					<span>Indoor</span>
 				</div>
-				<div class="text-sm font-bold font-mono text-foreground">50-1000 lx</div>
+				<div class="text-sm font-bold text-foreground">50-1000 lx</div>
 				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? "Active" : "Inactive"}
 				</div>
@@ -95,7 +95,7 @@
 					<Sun class="h-3.5 w-3.5" />
 					<span>Sunlight</span>
 				</div>
-				<div class="text-sm font-bold font-mono text-foreground">&gt;1000 lx</div>
+				<div class="text-sm font-bold text-foreground">&gt;1000 lx</div>
 				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux > 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux > 1000 ? "Active" : "Inactive"}
 				</div>

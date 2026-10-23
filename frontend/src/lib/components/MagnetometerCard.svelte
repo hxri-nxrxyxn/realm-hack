@@ -25,7 +25,7 @@
 				</div>
 			</div>
 
-			<div class="text-xs font-mono font-semibold text-emerald-400">
+			<div class="text-xs font-semibold text-emerald-400">
 				{isAnomaly ? "Anomaly" : `${sensorManager.magnetometer.fieldStrength.toFixed(0)} µT`}
 			</div>
 		</div>
@@ -39,15 +39,15 @@
 					Compass Heading
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
+					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none">
 						{Math.round(sensorManager.magnetometer.heading)}°
 					</span>
-					<span class="text-lg font-black text-emerald-300 font-mono">
+					<span class="text-lg font-black text-emerald-300">
 						{sensorManager.magnetometer.cardinal}
 					</span>
 				</div>
 				<div class="text-xs text-muted-foreground mt-2">
-					Field Flux: <span class="font-mono font-semibold text-foreground">{sensorManager.magnetometer.fieldStrength.toFixed(1)} µT</span>
+					Field Flux: <span class="font-semibold text-foreground">{sensorManager.magnetometer.fieldStrength.toFixed(1)} µT</span>
 				</div>
 			</div>
 
@@ -93,7 +93,7 @@
 					<Compass class="h-3.5 w-3.5" />
 					<span>X (North)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.magnetometer.x.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>
@@ -104,7 +104,7 @@
 					<Navigation class="h-3.5 w-3.5" />
 					<span>Y (East)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.magnetometer.y.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>
@@ -115,7 +115,7 @@
 					<Activity class="h-3.5 w-3.5" />
 					<span>Z (Down)</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.magnetometer.z.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>

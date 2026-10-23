@@ -45,7 +45,7 @@
 				<div class="min-w-0">
 					<div class="flex items-center gap-2.5 flex-wrap">
 						<h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight truncate">All Sensors</h1>
-						<span class="text-xs font-mono font-semibold text-emerald-400">
+						<span class="text-xs font-semibold text-emerald-400">
 							{sensorManager.isNative ? "Android" : "Web Preview"}
 						</span>
 					</div>
@@ -57,7 +57,7 @@
 
 			<!-- Live Frequency Display in Menu Bar -->
 			<div class="flex items-center shrink-0">
-				<div class="flex items-baseline gap-1 font-mono text-right">
+				<div class="flex items-baseline gap-1 text-right">
 					<span class="text-2xl sm:text-3xl font-black text-emerald-400">
 						{sensorManager.isListening ? sensorManager.updateRateHz : 0}
 					</span>
@@ -115,10 +115,10 @@
 							<Sliders class="h-4 w-4 text-emerald-400" />
 							<span class="text-xs font-bold uppercase tracking-wider text-foreground">Hardware Status</span>
 						</div>
-						<span class="text-xs font-mono font-semibold text-emerald-400">Capacitor 7</span>
+						<span class="text-xs font-semibold text-emerald-400">Capacitor 7</span>
 					</div>
 					<p class="text-xs text-muted-foreground mt-1">
-						Package: <span class="font-mono text-foreground font-semibold">net.rakshak.sensors</span>
+						Package: <span class="text-foreground font-semibold">net.rakshak.sensors</span>
 					</p>
 
 					<div class="mt-4 space-y-2.5 text-xs">
@@ -127,21 +127,21 @@
 								<Cpu class="h-3.5 w-3.5 text-emerald-400" />
 								<span>Platform Engine:</span>
 							</span>
-							<span class="font-mono font-bold text-foreground">{sensorManager.isNative ? "Android Native" : "Web Preview"}</span>
+							<span class="font-bold text-foreground">{sensorManager.isNative ? "Android Native" : "Web Preview"}</span>
 						</div>
 						<div class="flex justify-between items-center py-1 border-b border-border/40">
 							<span class="text-muted-foreground flex items-center gap-1.5">
 								<Footprints class="h-3.5 w-3.5 text-emerald-400" />
 								<span>Step Detector:</span>
 							</span>
-							<span class="font-mono font-bold text-emerald-400">{sensorManager.status.pedometerHardwareAvailable ? "Hardware" : "Software"}</span>
+							<span class="font-bold text-emerald-400">{sensorManager.status.pedometerHardwareAvailable ? "Hardware" : "Software"}</span>
 						</div>
 						<div class="flex justify-between items-center py-1">
 							<span class="text-muted-foreground flex items-center gap-1.5">
 								<Gauge class="h-3.5 w-3.5 text-emerald-400" />
 								<span>Update Rate:</span>
 							</span>
-							<span class="font-mono font-bold text-emerald-400">{sensorManager.updateRateHz} updates/sec</span>
+							<span class="font-bold text-emerald-400">{sensorManager.updateRateHz} updates/sec</span>
 						</div>
 					</div>
 				</div>

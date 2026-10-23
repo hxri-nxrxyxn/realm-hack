@@ -24,7 +24,7 @@
 				</div>
 			</div>
 
-			<div class="text-xs font-mono font-semibold text-emerald-400">
+			<div class="text-xs font-semibold text-emerald-400">
 				{isHighG ? "High Impact" : `${gForce} G`}
 			</div>
 		</div>
@@ -38,7 +38,7 @@
 					Net Acceleration Force
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
+					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none">
 						{sensorManager.accelerometer.magnitude.toFixed(2)}
 					</span>
 					<span class="text-base font-semibold text-muted-foreground">m/s²</span>
@@ -64,7 +64,7 @@
 						<Activity class="h-3.5 w-3.5 text-emerald-400" />
 						<span>X Axis</span>
 					</div>
-					<span class="font-mono font-bold text-foreground text-sm">
+					<span class="font-bold text-foreground text-sm">
 						{sensorManager.accelerometer.x > 0 ? "+" : ""}{sensorManager.accelerometer.x.toFixed(2)}
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>
@@ -85,7 +85,7 @@
 						<Sliders class="h-3.5 w-3.5 text-emerald-400" />
 						<span>Y Axis</span>
 					</div>
-					<span class="font-mono font-bold text-foreground text-sm">
+					<span class="font-bold text-foreground text-sm">
 						{sensorManager.accelerometer.y > 0 ? "+" : ""}{sensorManager.accelerometer.y.toFixed(2)}
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>
@@ -106,7 +106,7 @@
 						<Zap class="h-3.5 w-3.5 text-emerald-400" />
 						<span>Z Axis</span>
 					</div>
-					<span class="font-mono font-bold text-foreground text-sm">
+					<span class="font-bold text-foreground text-sm">
 						{sensorManager.accelerometer.z > 0 ? "+" : ""}{sensorManager.accelerometer.z.toFixed(2)}
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>

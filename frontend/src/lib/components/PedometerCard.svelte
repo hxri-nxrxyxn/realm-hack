@@ -28,7 +28,7 @@
 				</div>
 			</div>
 
-			<div class="text-xs font-mono font-semibold {isWalking ? 'text-emerald-400' : 'text-muted-foreground'}">
+			<div class="text-xs font-semibold {isWalking ? 'text-emerald-400' : 'text-muted-foreground'}">
 				{isWalking ? "Active" : "Idle"}
 			</div>
 		</div>
@@ -41,7 +41,7 @@
 				<div class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
 					Cumulative Steps
 				</div>
-				<div class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
+				<div class="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none">
 					{sensorManager.pedometer.steps.toLocaleString()}
 				</div>
 			</div>
@@ -60,7 +60,7 @@
 		<div class="space-y-2 pt-1">
 			<div class="flex items-center justify-between text-xs">
 				<span class="text-muted-foreground font-medium">Daily Target: {DAILY_GOAL.toLocaleString()} steps</span>
-				<span class="font-bold text-emerald-400 font-mono text-sm">{stepProgress}%</span>
+				<span class="font-bold text-emerald-400 text-sm">{stepProgress}%</span>
 			</div>
 			<Progress value={stepProgress} class="h-2.5 bg-secondary/80" />
 		</div>
@@ -73,7 +73,7 @@
 					<Navigation class="h-3.5 w-3.5" />
 					<span>Distance</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.pedometer.distanceKm.toFixed(2)}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">km</div>
@@ -85,7 +85,7 @@
 					<Flame class="h-3.5 w-3.5" />
 					<span>Calories</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.pedometer.caloriesBurned.toFixed(0)}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">kcal</div>
@@ -97,7 +97,7 @@
 					<Zap class="h-3.5 w-3.5" />
 					<span>Detected</span>
 				</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold text-foreground">
 					{sensorManager.pedometer.detectedSteps}
 				</div>
 				<div class="text-[10px] text-muted-foreground uppercase font-medium">Pulses</div>
