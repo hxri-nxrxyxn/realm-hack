@@ -1,0 +1,19 @@
+services:
+  whisper:
+    build: .
+    container_name: whisper_server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models
+    command: ["-m", "/models/ggml-model-q8_0.bin", "--host", "0.0.0.0", "--port", "8080", "--public", "/app/public", "-t", "4"]
+    networks:
+      - default
+      - n8n_network
+    restart: unless-stopped
+
+networks:
+  default:
+  n8n_network:
+    name: n8n_n8n_network
+    external: true
