@@ -19,7 +19,8 @@
 		Compass,
 		Zap,
 		SunMedium,
-		Sliders
+		Sliders,
+		MessageSquare
 	} from "lucide-svelte";
 
 	onMount(async () => {
@@ -160,6 +161,36 @@
 						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-semibold truncate w-full">
 							{Math.round(sensorManager.ambientLight.lux)} lx
 						</div>
+					</div>
+				</div>
+			</Card.Root>
+		</a>
+
+		<!-- Default SMS Receiver & Trigger Monitor Route Link -->
+		<a
+			href="/receiver"
+			class="group block transition-all duration-200 active:scale-[0.99] focus:outline-none"
+			title="SMS Receiver & Emergency Alert Trigger Monitor"
+		>
+			<Card.Root class="overflow-hidden border border-border/80 bg-card/60 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-md transition-all group-hover:border-primary/60 group-hover:shadow-primary/10">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+							<MessageSquare class="h-5 w-5" />
+						</div>
+						<div>
+							<h3 class="text-sm sm:text-base font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+								SMS Receiver & Emergency Trigger
+							</h3>
+							<p class="text-xs text-muted-foreground">
+								Default SMS handler, alarm vibrations & emergency auto-open
+							</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20 group-hover:bg-primary/20 transition-all">
+						<span>Open Monitor</span>
+						<ChevronRight class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
 					</div>
 				</div>
 			</Card.Root>

@@ -18,7 +18,8 @@
 		ArrowLeft,
 		Cpu,
 		Footprints,
-		Gauge
+		Gauge,
+		MessageSquare
 	} from "lucide-svelte";
 
 	onMount(async () => {
@@ -56,7 +57,16 @@
 			</div>
 
 			<!-- Live Frequency Display in Menu Bar -->
-			<div class="flex items-center shrink-0">
+			<div class="flex items-center gap-3 shrink-0">
+				<a
+					href="/receiver"
+					class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/80 text-foreground ring-1 ring-border/60 hover:bg-secondary text-xs font-bold transition-all active:scale-95"
+					title="SMS Receiver Monitor"
+				>
+					<MessageSquare class="h-4 w-4 text-emerald-400" />
+					<span class="hidden sm:inline">SMS Receiver</span>
+				</a>
+
 				<div class="flex items-baseline gap-1 text-right">
 					<span class="text-2xl sm:text-3xl font-black text-emerald-400">
 						{sensorManager.isListening ? sensorManager.updateRateHz : 0}
