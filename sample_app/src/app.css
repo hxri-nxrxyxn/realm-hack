@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --bg-page: #000000;
+  --bg-panel: #0a0a0a;
+  --bg-input: #000000;
+  
+  --border-dim: #1f1f1f;
+  --border-mid: #333333;
+  --border-strong: #666666;
+  --border-active: #ffffff;
+
+  --text-bright: #ffffff;
+  --text-mid: #999999;
+  --text-dim: #555555;
+
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
+  --btn-hover: #e0e0e0;
+
+  font-family: 'IBM Plex Mono', monospace;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-page);
+  color: var(--text-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: lowercase;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+#app {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

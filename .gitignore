@@ -7,9 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+**/node_modules
+**/dist
+**/dist-ssr
 *.local
 
 # Editor directories and files
@@ -23,7 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# Android build outputs
-android/.gradle
-android/build
-android/app/build
+# Android build outputs & local config
+**/.gradle
+**/build
+**/app/build
+**/local.properties
+sample_app.apk
