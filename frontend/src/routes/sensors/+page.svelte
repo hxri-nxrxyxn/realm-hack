@@ -68,7 +68,7 @@
 	</header>
 
 	<!-- Main Body Content: All Sensors Grid (Scrollable) -->
-	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5 pb-28 sm:pb-32">
+	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5 pb-20 sm:pb-24">
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
 			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">
@@ -157,24 +157,24 @@
 	</main>
 
 	<!-- Stagnant Fixed Bottom Bar -->
-	<div class="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-safe bg-background/90 backdrop-blur-2xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
-		<div class="mx-auto max-w-5xl">
+	<div class="fixed bottom-0 left-0 right-0 z-40 px-4 py-2.5 pb-safe bg-background/90 backdrop-blur-2xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
+		<div class="mx-auto max-w-md">
 			{#if sensorManager.isListening}
 				<button
 					type="button"
-					class="w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/70 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 hover:from-emerald-750 hover:via-emerald-650 hover:to-emerald-750 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
+					class="w-full h-11 sm:h-12 text-sm sm:text-base font-bold rounded-xl shadow-lg shadow-emerald-950/70 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 hover:from-emerald-750 hover:via-emerald-650 hover:to-emerald-750 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-2"
 					onclick={() => sensorManager.stop()}
 				>
-					<Square class="h-6 w-6 fill-current" />
+					<Square class="h-4.5 w-4.5 fill-current" />
 					<span class="tracking-wide">Stop Sensors</span>
 				</button>
 			{:else}
 				<button
 					type="button"
-					class="w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
+					class="w-full h-11 sm:h-12 text-sm sm:text-base font-bold rounded-xl shadow-lg shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-2"
 					onclick={() => sensorManager.start()}
 				>
-					<Play class="h-6 w-6 fill-current" />
+					<Play class="h-4.5 w-4.5 fill-current" />
 					<span class="tracking-wide">Start Sensors</span>
 				</button>
 			{/if}
