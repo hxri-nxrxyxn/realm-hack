@@ -5,21 +5,35 @@
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { sendSms } from "#lib/services/smsService.js";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { Send, MessageSquare, Phone, CheckCircle2, AlertCircle, Sparkles } from "lucide-svelte";
+	import { Send, MessageSquare, Phone, CheckCircle2, AlertCircle, Sparkles, ShieldCheck } from "lucide-svelte";
 
 	let phoneNumber = $state("9995283835");
-	let message = $state("Rakshak Alert: Live sensor detection active. Steps: 0, Heading: N");
+	let message = $state("Rakshak Alert: Emergency assistance requested.");
 	let isSending = $state(false);
 	let status = $state<{ type: "success" | "error"; text: string } | null>(null);
 
-	function appendSensorTelemetry() {
+	function buildTelemetryReport(): string {
 		const steps = sensorManager.pedometer.steps;
+		const distance = sensorManager.pedometer.distanceKm.toFixed(2);
+		const lux = Math.round(sensorManager.ambientLight.lux);
+		const accel = sensorManager.accelerometer.magnitude.toFixed(1);
+		const gyro = sensorManager.gyroscope.rate.toFixed(1);
 		const heading = Math.round(sensorManager.magnetometer.heading);
 		const cardinal = sensorManager.magnetometer.cardinal;
-		const accel = sensorManager.accelerometer.magnitude.toFixed(1);
-		const lux = Math.round(sensorManager.ambientLight.lux);
 
-		message = `Rakshak Alert: Steps: ${steps} | Heading: ${heading}° ${cardinal} | Accel: ${accel} m/s² | Lux: ${lux} lx`;
+		return [
+			"Live Sensors (5/5):",
+			`• Pedometer: ${steps} steps (${distance} km)`,
+			`• Light: ${lux} lx`,
+			`• Accelerometer: ${accel} m/s²`,
+			`• Gyroscope: ${gyro} rad/s`,
+			`• Magnetometer: ${heading}° ${cardinal}`
+		].join("\n");
+	}
+
+	function appendSensorTelemetry() {
+		const report = buildTelemetryReport();
+		message = `Rakshak Alert: Emergency assistance requested.\n\n${report}`;
 	}
 
 	async function handleSend() {
@@ -27,7 +41,17 @@
 		isSending = true;
 		status = null;
 
-		const result = await sendSms(phoneNumber, message);
+		const telemetryReport = buildTelemetryReport();
+		let finalMessage = message.trim();
+
+		// Ensure all 5 live sensor readings are attached upon sending
+		if (!finalMessage.includes("Live Sensors (5/5)")) {
+			finalMessage = finalMessage
+				? `${finalMessage}\n\n${telemetryReport}`
+				: telemetryReport;
+		}
+
+		const result = await sendSms(phoneNumber, finalMessage);
 		isSending = false;
 
 		if (result.success) {
@@ -107,6 +131,10 @@
 				bind:value={message}
 				class="rounded-xl bg-secondary/50 border-border/70 text-foreground text-xs sm:text-sm resize-none focus:border-primary p-3"
 			/>
+			<div class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium pt-0.5">
+				<ShieldCheck class="h-3.5 w-3.5 shrink-0" />
+				<span>Includes all 5 live sensor readings (Pedometer, Light, Accel, Gyro, Compass)</span>
+			</div>
 		</div>
 
 		<!-- Feedback Status Alert Banner -->
