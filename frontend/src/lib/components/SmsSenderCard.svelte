@@ -9,7 +9,7 @@
 	import { Send, MessageSquare, Phone, CheckCircle2, AlertCircle, Sparkles } from "lucide-svelte";
 
 	let phoneNumber = $state("9995283835");
-	let message = $state("🚨 Rakshak Alert: Live sensor detection active. Steps: 0, Heading: N");
+	let message = $state("Rakshak Alert: Live sensor detection active. Steps: 0, Heading: N");
 	let isSending = $state(false);
 	let status = $state<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -20,7 +20,7 @@
 		const accel = sensorManager.accelerometer.magnitude.toFixed(1);
 		const lux = Math.round(sensorManager.ambientLight.lux);
 
-		message = `🚨 Rakshak Alert: Steps: ${steps} | Heading: ${heading}° ${cardinal} | Accel: ${accel} m/s² | Lux: ${lux} lx`;
+		message = `Rakshak Alert: Steps: ${steps} | Heading: ${heading}° ${cardinal} | Accel: ${accel} m/s² | Lux: ${lux} lx`;
 	}
 
 	async function handleSend() {
@@ -126,7 +126,7 @@
 				{#if status.type === "success"}
 					<CheckCircle2 class="h-4 w-4 shrink-0 text-emerald-400" />
 				{:else}
-					<AlertCircle class="h-4 w-4 shrink-0 text-red-400" />
+					<AlertCircle class="h-4 w-4 shrink-0 text-emerald-400" />
 				{/if}
 				<span class="truncate">{status.text}</span>
 			</div>

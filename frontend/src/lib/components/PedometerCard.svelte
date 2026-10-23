@@ -32,7 +32,7 @@
 			<Badge
 				variant="outline"
 				class={isWalking
-					? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-0.5 animate-pulse"
+					? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-semibold px-2.5 py-0.5"
 					: "border-border bg-secondary/60 text-muted-foreground text-xs font-medium px-2.5 py-0.5"}
 			>
 				<span class="mr-1.5 h-1.5 w-1.5 rounded-full {isWalking ? 'bg-emerald-400' : 'bg-muted-foreground'}"></span>
@@ -88,7 +88,7 @@
 
 			<!-- Calories -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-amber-400 mb-1">
+				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-lime-400 mb-1">
 					<Flame class="h-3.5 w-3.5" />
 					<span>Calories</span>
 				</div>
@@ -100,7 +100,7 @@
 
 			<!-- Detector Cadence -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-sky-400 mb-1">
+				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-teal-400 mb-1">
 					<Zap class="h-3.5 w-3.5" />
 					<span>Detected</span>
 				</div>

@@ -57,7 +57,7 @@
 							variant="outline"
 							class={sensorManager.isNative
 								? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-xs font-semibold px-2.5 py-0.5"
-								: "border-blue-500/40 bg-blue-500/15 text-blue-300 text-xs font-semibold px-2.5 py-0.5"}
+								: "border-teal-500/40 bg-teal-500/15 text-teal-300 text-xs font-semibold px-2.5 py-0.5"}
 						>
 							{#if sensorManager.isNative}
 								<Smartphone class="mr-1 h-3.5 w-3.5 inline" /> Android
@@ -96,8 +96,8 @@
 	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5">
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
-			<Alert.Root class="border-amber-500/40 bg-amber-500/15 text-amber-200 rounded-2xl">
-				<ShieldCheck class="h-5 w-5 text-amber-400" />
+			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">
+				<ShieldCheck class="h-5 w-5 text-emerald-400" />
 				<Alert.Title class="text-sm font-bold">Permission Required for Pedometer</Alert.Title>
 				<Alert.Description class="text-xs mt-1">
 					Activity Recognition permission is needed for Android hardware step tracking.
@@ -157,7 +157,7 @@
 						</div>
 						<div class="flex justify-between items-center rounded-lg bg-secondary/50 px-2.5 py-1.5">
 							<span class="text-muted-foreground">Update Rate:</span>
-							<span class="font-mono font-bold text-sky-400">{sensorManager.updateRateHz} updates/sec</span>
+							<span class="font-mono font-bold text-teal-400">{sensorManager.updateRateHz} updates/sec</span>
 						</div>
 					</div>
 				</div>
@@ -199,7 +199,7 @@
 						variant="outline"
 						class={sensorManager.syncStatus === "connected"
 							? "border-emerald-500/30 text-emerald-300 text-[10px] font-bold"
-							: "border-amber-500/30 text-amber-300 text-[10px] font-bold"}
+							: "border-lime-500/30 text-lime-300 text-[10px] font-bold"}
 					>
 						{sensorManager.syncMessage || sensorManager.syncStatus}
 					</Badge>

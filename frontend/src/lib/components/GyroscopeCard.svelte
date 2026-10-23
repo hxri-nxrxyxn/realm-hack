@@ -9,14 +9,14 @@
 	let degPerSec = $derived(Math.round(sensorManager.gyroscope.rate * (180 / Math.PI)));
 </script>
 
-<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-violet-500/40 rounded-2xl">
+<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-emerald-500/40 rounded-2xl">
 	<!-- Ambient glow -->
-	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-violet-500/10 blur-2xl"></div>
+	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl"></div>
 
 	<Card.Header class="pb-2">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-3">
-				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/30 shadow-sm">
+				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30 shadow-sm">
 					<Compass class="h-6 w-6" />
 				</div>
 				<div>
@@ -28,7 +28,7 @@
 			<Badge
 				variant="outline"
 				class={isSpinning
-					? "border-violet-500/40 bg-violet-500/20 text-violet-300 text-xs font-semibold px-2.5 py-0.5 animate-pulse"
+					? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200 text-xs font-semibold px-2.5 py-0.5"
 					: "border-border bg-secondary/60 text-muted-foreground text-xs font-medium px-2.5 py-0.5"}
 			>
 				{isSpinning ? "Active Spin" : "Stationary"}
@@ -48,25 +48,25 @@
 						{sensorManager.gyroscope.rate.toFixed(2)}
 					</span>
 					<span class="text-base font-semibold text-muted-foreground">rad/s</span>
-					<span class="text-xs font-bold font-mono text-violet-400 ml-1">({degPerSec}°/s)</span>
+					<span class="text-xs font-bold font-mono text-emerald-400 ml-1">({degPerSec}°/s)</span>
 				</div>
 			</div>
 			<div class="flex justify-end sm:justify-start">
 				<Sparkline
 					data={sensorManager.gyroHistory}
-					strokeColor="#a855f7"
-					fillColor="rgba(168, 85, 247, 0.15)"
+					strokeColor="#10b981"
+					fillColor="rgba(16, 185, 129, 0.15)"
 					height={46}
 					width={140}
 				/>
 			</div>
 		</div>
 
-		<!-- 3-Axis Rotation Cards -->
+		<!-- 3-Axis Rotation Cards in Shades of Green -->
 		<div class="grid grid-cols-3 gap-2.5 pt-1">
 			<!-- Pitch X -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-violet-400 uppercase tracking-wider mb-1">
+				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
 					Pitch (X)
 				</div>
 				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
@@ -77,7 +77,7 @@
 
 			<!-- Roll Y -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-purple-400 uppercase tracking-wider mb-1">
+				<div class="text-[11px] font-semibold text-teal-400 uppercase tracking-wider mb-1">
 					Roll (Y)
 				</div>
 				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
@@ -88,7 +88,7 @@
 
 			<!-- Yaw Z -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-fuchsia-400 uppercase tracking-wider mb-1">
+				<div class="text-[11px] font-semibold text-green-400 uppercase tracking-wider mb-1">
 					Yaw (Z)
 				</div>
 				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">

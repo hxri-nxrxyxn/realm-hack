@@ -3,20 +3,20 @@
 	import { Badge } from "#lib/components/ui/badge/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { Activity, Gauge } from "lucide-svelte";
+	import { Activity } from "lucide-svelte";
 
 	let isHighG = $derived(sensorManager.accelerometer.magnitude > 15);
 	let gForce = $derived((sensorManager.accelerometer.magnitude / 9.80665).toFixed(2));
 </script>
 
-<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-sky-500/40 rounded-2xl">
+<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-emerald-500/40 rounded-2xl">
 	<!-- Ambient glow -->
-	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-sky-500/10 blur-2xl"></div>
+	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl"></div>
 
 	<Card.Header class="pb-2">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-3">
-				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/30 shadow-sm">
+				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30 shadow-sm">
 					<Activity class="h-6 w-6" />
 				</div>
 				<div>
@@ -28,8 +28,8 @@
 			<Badge
 				variant="outline"
 				class={isHighG
-					? "border-red-500/40 bg-red-500/20 text-red-300 text-xs font-semibold px-2.5 py-0.5 animate-pulse"
-					: "border-sky-500/30 bg-sky-500/10 text-sky-300 text-xs font-medium px-2.5 py-0.5"}
+					? "border-emerald-400/50 bg-emerald-500/20 text-emerald-200 text-xs font-semibold px-2.5 py-0.5"
+					: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-medium px-2.5 py-0.5"}
 			>
 				{isHighG ? "High Impact" : `${gForce} G`}
 			</Badge>
@@ -53,21 +53,21 @@
 			<div class="flex justify-end sm:justify-start">
 				<Sparkline
 					data={sensorManager.accelHistory}
-					strokeColor="#38bdf8"
-					fillColor="rgba(56, 189, 248, 0.15)"
+					strokeColor="#34d399"
+					fillColor="rgba(52, 211, 153, 0.15)"
 					height={46}
 					width={140}
 				/>
 			</div>
 		</div>
 
-		<!-- 3-Axis Balance Meters -->
+		<!-- 3-Axis Balance Meters in Shades of Green -->
 		<div class="space-y-3 rounded-xl bg-secondary/40 p-3.5 ring-1 ring-border/40">
-			<!-- X Axis -->
+			<!-- X Axis (Emerald) -->
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
-					<div class="flex items-center gap-1.5 font-semibold text-sky-400">
-						<span class="h-2 w-2 rounded-full bg-sky-400"></span>
+					<div class="flex items-center gap-1.5 font-semibold text-emerald-400">
+						<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
 						<span>X-Axis (Lateral Tilt)</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -78,17 +78,17 @@
 				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
-						class="h-full bg-gradient-to-r from-sky-500 to-sky-400 transition-all duration-75 rounded-full"
+						class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-75 rounded-full"
 						style:width={`${Math.min(100, Math.abs(sensorManager.accelerometer.x) * 8)}%`}
 					></div>
 				</div>
 			</div>
 
-			<!-- Y Axis -->
+			<!-- Y Axis (Teal-Jade Green) -->
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
-					<div class="flex items-center gap-1.5 font-semibold text-indigo-400">
-						<span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+					<div class="flex items-center gap-1.5 font-semibold text-teal-400">
+						<span class="h-2 w-2 rounded-full bg-teal-400"></span>
 						<span>Y-Axis (Pitch / Surge)</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -99,17 +99,17 @@
 				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
-						class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-75 rounded-full"
+						class="h-full bg-gradient-to-r from-teal-500 to-teal-400 transition-all duration-75 rounded-full"
 						style:width={`${Math.min(100, Math.abs(sensorManager.accelerometer.y) * 8)}%`}
 					></div>
 				</div>
 			</div>
 
-			<!-- Z Axis -->
+			<!-- Z Axis (Mint-Spring Green) -->
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
-					<div class="flex items-center gap-1.5 font-semibold text-cyan-400">
-						<span class="h-2 w-2 rounded-full bg-cyan-400"></span>
+					<div class="flex items-center gap-1.5 font-semibold text-green-400">
+						<span class="h-2 w-2 rounded-full bg-green-400"></span>
 						<span>Z-Axis (Vertical Gravity)</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -120,7 +120,7 @@
 				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
-						class="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-75 rounded-full"
+						class="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-75 rounded-full"
 						style:width={`${Math.min(100, Math.abs(sensorManager.accelerometer.z) * 8)}%`}
 					></div>
 				</div>

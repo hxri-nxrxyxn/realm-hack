@@ -11,8 +11,8 @@
 
 	let {
 		data = [],
-		strokeColor = "#3b82f6",
-		fillColor = "rgba(59, 130, 246, 0.12)",
+		strokeColor = "#10b981",
+		fillColor = "rgba(16, 185, 129, 0.12)",
 		height = 42,
 		width = 130,
 		minVal,

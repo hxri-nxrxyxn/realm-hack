@@ -56,7 +56,7 @@
 							variant="outline"
 							class={sensorManager.isNative
 								? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-xs font-semibold px-2.5 py-0.5"
-								: "border-blue-500/40 bg-blue-500/15 text-blue-300 text-xs font-semibold px-2.5 py-0.5"}
+								: "border-teal-500/40 bg-teal-500/15 text-teal-300 text-xs font-semibold px-2.5 py-0.5"}
 						>
 							{#if sensorManager.isNative}
 								<Smartphone class="mr-1 h-3.5 w-3.5 inline" /> Android
@@ -95,8 +95,8 @@
 	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5">
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
-			<Alert.Root class="border-amber-500/40 bg-amber-500/15 text-amber-200 rounded-2xl">
-				<ShieldCheck class="h-5 w-5 text-amber-400" />
+			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">
+				<ShieldCheck class="h-5 w-5 text-emerald-400" />
 				<Alert.Title class="text-sm font-bold">Permission Required for Pedometer</Alert.Title>
 				<Alert.Description class="text-xs mt-1">
 					Activity Recognition permission is needed for Android hardware step tracking.
@@ -154,36 +154,36 @@
 				<div class="grid grid-cols-4 gap-2 sm:gap-3 pt-2 border-t border-border/50">
 					<!-- Cell 1: Accelerometer -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<Activity class="h-4 w-4 text-sky-400 mb-1" />
+						<Activity class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Accel</div>
-						<div class="text-[10px] text-sky-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{sensorManager.accelerometer.magnitude.toFixed(1)} m/s²
 						</div>
 					</div>
 
 					<!-- Cell 2: Gyroscope -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<Compass class="h-4 w-4 text-violet-400 mb-1" />
+						<Compass class="h-4 w-4 text-teal-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Gyro</div>
-						<div class="text-[10px] text-violet-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-teal-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{sensorManager.gyroscope.rate.toFixed(1)} rad/s
 						</div>
 					</div>
 
 					<!-- Cell 3: Compass -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<Zap class="h-4 w-4 text-rose-400 mb-1" />
+						<Zap class="h-4 w-4 text-green-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Compass</div>
-						<div class="text-[10px] text-rose-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-green-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{Math.round(sensorManager.magnetometer.heading)}° {sensorManager.magnetometer.cardinal}
 						</div>
 					</div>
 
 					<!-- Cell 4: Photometer & Steps -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<SunMedium class="h-4 w-4 text-amber-400 mb-1" />
+						<SunMedium class="h-4 w-4 text-lime-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Light & Steps</div>
-						<div class="text-[10px] text-amber-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-lime-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{Math.round(sensorManager.ambientLight.lux)} lx
 						</div>
 					</div>
@@ -222,7 +222,7 @@
 						variant="outline"
 						class={sensorManager.syncStatus === "connected"
 							? "border-emerald-500/30 text-emerald-300 text-[10px] font-bold"
-							: "border-amber-500/30 text-amber-300 text-[10px] font-bold"}
+							: "border-lime-500/30 text-lime-300 text-[10px] font-bold"}
 					>
 						{sensorManager.syncMessage || sensorManager.syncStatus}
 					</Badge>
