@@ -7,6 +7,7 @@
 	import PedometerCard from "#lib/components/PedometerCard.svelte";
 	import AmbientLightCard from "#lib/components/AmbientLightCard.svelte";
 	import SmsSenderCard from "#lib/components/SmsSenderCard.svelte";
+	import logo from "#lib/assets/logo.png";
 
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import {
@@ -36,8 +37,8 @@
 	<header class="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl px-4 sm:px-6 pt-safe pb-4 sm:pb-5 shadow-md">
 		<div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
 			<div class="flex items-center gap-3.5 sm:gap-4">
-				<div class="flex h-13 w-13 sm:h-15 sm:w-15 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg ring-1 ring-primary/30">
-					<Activity class="h-7 w-7 sm:h-8 sm:w-8" />
+				<div class="flex h-13 w-13 sm:h-15 sm:w-15 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg ring-1 ring-primary/30 overflow-hidden p-1.5">
+					<img src={logo} alt="Rakshak Logo" class="h-full w-full object-contain rounded-xl" />
 				</div>
 				<div class="min-w-0">
 					<div class="flex items-center gap-2.5 flex-wrap">
