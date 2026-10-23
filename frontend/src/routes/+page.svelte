@@ -10,6 +10,7 @@
 	import MagnetometerCard from "#lib/components/MagnetometerCard.svelte";
 	import PedometerCard from "#lib/components/PedometerCard.svelte";
 	import AmbientLightCard from "#lib/components/AmbientLightCard.svelte";
+	import SmsSenderCard from "#lib/components/SmsSenderCard.svelte";
 
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import {
@@ -186,6 +187,9 @@
 				</div>
 			</Card.Root>
 		</a>
+
+		<!-- Direct SMS Alert Box -->
+		<SmsSenderCard />
 
 		<!-- Telemetry & Stream Status Strip -->
 		<div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-xs shadow-sm">
