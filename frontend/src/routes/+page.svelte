@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
-	import { Switch } from "#lib/components/ui/switch/index.js";
 	import * as Alert from "#lib/components/ui/alert/index.js";
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { Separator } from "#lib/components/ui/separator/index.js";
 
 	import MagnetometerCard from "#lib/components/MagnetometerCard.svelte";
 	import PedometerCard from "#lib/components/PedometerCard.svelte";
@@ -16,11 +13,7 @@
 	import {
 		Play,
 		Square,
-		Smartphone,
-		Globe,
-		Radio,
 		ShieldCheck,
-		Wifi,
 		Activity,
 		ChevronRight,
 		Compass,
@@ -37,8 +30,6 @@
 	onDestroy(() => {
 		sensorManager.destroy();
 	});
-
-	let isSyncChecked = $derived(sensorManager.backendSyncEnabled);
 </script>
 
 <div class="min-h-screen bg-background text-foreground flex flex-col pb-8">
@@ -52,41 +43,24 @@
 				<div class="min-w-0">
 					<div class="flex items-center gap-2.5 flex-wrap">
 						<h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight truncate">Rakshak Sensors</h1>
-						<Badge
-							variant="outline"
-							class={sensorManager.isNative
-								? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-xs font-semibold px-2.5 py-0.5"
-								: "border-teal-500/40 bg-teal-500/15 text-teal-300 text-xs font-semibold px-2.5 py-0.5"}
-						>
-							{#if sensorManager.isNative}
-								<Smartphone class="mr-1 h-3.5 w-3.5 inline" /> Android
-							{:else}
-								<Globe class="mr-1 h-3.5 w-3.5 inline" /> Web Preview
-							{/if}
-						</Badge>
+						<span class="text-xs font-mono font-semibold text-emerald-400">
+							{sensorManager.isNative ? "Android" : "Web Preview"}
+						</span>
 					</div>
 					<p class="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-						Live Hardware Telemetry
+						Hardware Telemetry
 					</p>
 				</div>
 			</div>
 
-			<!-- Live Frequency Pill in Menu Bar -->
+			<!-- Live Frequency Display in Menu Bar -->
 			<div class="flex items-center shrink-0">
-				{#if sensorManager.isListening}
-					<div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-bold text-emerald-300 font-mono whitespace-nowrap shadow-sm ring-1 ring-emerald-500/20">
-						<span class="relative flex h-2.5 w-2.5 shrink-0">
-							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-							<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-						</span>
-						<span class="whitespace-nowrap tracking-wide">{sensorManager.updateRateHz} Hz</span>
-					</div>
-				{:else}
-					<div class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/80 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold text-muted-foreground font-mono whitespace-nowrap shadow-sm">
-						<span class="h-2 w-2 rounded-full bg-muted-foreground/60 shrink-0"></span>
-						<span class="whitespace-nowrap tracking-wide">0 Hz</span>
-					</div>
-				{/if}
+				<div class="flex items-baseline gap-1 font-mono text-right">
+					<span class="text-2xl sm:text-3xl font-black text-emerald-400">
+						{sensorManager.isListening ? sensorManager.updateRateHz : 0}
+					</span>
+					<span class="text-xs font-bold text-emerald-400/70">Hz</span>
+				</div>
 			</div>
 		</div>
 	</header>
@@ -150,7 +124,7 @@
 					</div>
 				</div>
 
-				<!-- 4x1 Matrix (4 Columns x 1 Row) -->
+				<!-- 4x1 Matrix (4 Columns x 1 Row) in Unified Emerald Gradient -->
 				<div class="grid grid-cols-4 gap-2 sm:gap-3 pt-2 border-t border-border/50">
 					<!-- Cell 1: Accelerometer -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
@@ -163,27 +137,27 @@
 
 					<!-- Cell 2: Gyroscope -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<Compass class="h-4 w-4 text-teal-400 mb-1" />
+						<Compass class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Gyro</div>
-						<div class="text-[10px] text-teal-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{sensorManager.gyroscope.rate.toFixed(1)} rad/s
 						</div>
 					</div>
 
 					<!-- Cell 3: Compass -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<Zap class="h-4 w-4 text-green-400 mb-1" />
+						<Zap class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Compass</div>
-						<div class="text-[10px] text-green-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{Math.round(sensorManager.magnetometer.heading)}° {sensorManager.magnetometer.cardinal}
 						</div>
 					</div>
 
 					<!-- Cell 4: Photometer & Steps -->
 					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
-						<SunMedium class="h-4 w-4 text-lime-400 mb-1" />
+						<SunMedium class="h-4 w-4 text-emerald-400 mb-1" />
 						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Light & Steps</div>
-						<div class="text-[10px] text-lime-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
 							{Math.round(sensorManager.ambientLight.lux)} lx
 						</div>
 					</div>
@@ -194,88 +168,27 @@
 		<!-- Direct SMS Alert Box -->
 		<SmsSenderCard />
 
-		<!-- Telemetry & Stream Status Strip -->
-		<div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-xs shadow-sm">
-			<div class="flex items-center gap-3">
-				<div class="flex items-center gap-2">
-					<Radio class={sensorManager.isListening ? "h-4 w-4 text-emerald-400 animate-pulse" : "h-4 w-4 text-muted-foreground"} />
-					<span class="text-sm font-bold text-foreground">
-						{sensorManager.isListening ? "Live Stream Active" : "Stream Suspended"}
-					</span>
-				</div>
-				<Separator orientation="vertical" class="h-4 hidden sm:block" />
-				<div class="text-xs text-muted-foreground hidden sm:block">
-					Buffer: <span class="text-foreground font-mono font-bold">25 points/sensor</span>
-				</div>
-			</div>
-
-			<!-- Backend Relay Switch -->
-			<div class="flex items-center gap-2.5">
-				<Wifi class={sensorManager.backendSyncEnabled ? "h-4 w-4 text-primary" : "h-4 w-4 text-muted-foreground"} />
-				<span class="text-xs font-medium text-muted-foreground">Server Relay:</span>
-				<Switch
-					checked={isSyncChecked}
-					onCheckedChange={() => sensorManager.toggleBackendSync()}
-				/>
-				{#if sensorManager.backendSyncEnabled}
-					<Badge
-						variant="outline"
-						class={sensorManager.syncStatus === "connected"
-							? "border-emerald-500/30 text-emerald-300 text-[10px] font-bold"
-							: "border-lime-500/30 text-lime-300 text-[10px] font-bold"}
-					>
-						{sensorManager.syncMessage || sensorManager.syncStatus}
-					</Badge>
-				{/if}
-			</div>
-		</div>
-
-		<!-- The Only Start Sensors Button at the End -->
-		<div class="pt-2 pb-4">
-			<Card.Root class="overflow-hidden border-2 border-border/80 bg-gradient-to-b from-card to-card/60 rounded-3xl p-4 sm:p-6 shadow-xl text-center">
-				<div class="max-w-md mx-auto space-y-3">
-					<div>
-						<h2 class="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-							{sensorManager.isListening ? "Sensor Telemetry Active" : "Sensors Stopped"}
-						</h2>
-						<p class="text-xs sm:text-sm text-muted-foreground mt-1">
-							{sensorManager.isListening
-								? "Hardware sensors are streaming live measurements."
-								: "Tap below to resume live readings."}
-						</p>
-					</div>
-
-					<!-- Single Start Sensors / Stop Sensors Button -->
-					{#if sensorManager.isListening}
-						<Button
-							variant="destructive"
-							class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 transition-transform active:scale-[0.98] ring-4 ring-destructive/20 cursor-pointer"
-							onclick={() => sensorManager.stop()}
-						>
-							<Square class="h-6 w-6 fill-current animate-pulse" />
-							<span>Stop Sensors</span>
-						</Button>
-					{:else}
-						<Button
-							variant="default"
-							class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 bg-emerald-600 hover:bg-emerald-500 text-white transition-transform active:scale-[0.98] ring-4 ring-emerald-500/30 cursor-pointer"
-							onclick={() => sensorManager.start()}
-						>
-							<Play class="h-6 w-6 fill-current" />
-							<span>Start Sensors</span>
-						</Button>
-					{/if}
-
-					<div class="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-1">
-						<span class="flex items-center gap-1">
-							<span class="h-1.5 w-1.5 rounded-full {sensorManager.isListening ? 'bg-emerald-400' : 'bg-muted-foreground'}"></span>
-							{sensorManager.isListening ? 'Streaming' : 'Paused'}
-						</span>
-						<span>•</span>
-						<span>Optimized for all screen sizes</span>
-					</div>
-				</div>
-			</Card.Root>
+		<!-- Single Start / Stop Button -->
+		<div class="pt-2 pb-6">
+			{#if sensorManager.isListening}
+				<Button
+					variant="destructive"
+					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 transition-transform active:scale-[0.98] ring-4 ring-emerald-900/30 bg-emerald-950 border border-emerald-700/60 text-emerald-200 hover:bg-emerald-900 cursor-pointer"
+					onclick={() => sensorManager.stop()}
+				>
+					<Square class="h-6 w-6 fill-current" />
+					<span>Stop Sensors</span>
+				</Button>
+			{:else}
+				<Button
+					variant="default"
+					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 bg-emerald-600 hover:bg-emerald-500 text-white transition-transform active:scale-[0.98] ring-4 ring-emerald-500/30 cursor-pointer"
+					onclick={() => sensorManager.start()}
+				>
+					<Play class="h-6 w-6 fill-current" />
+					<span>Start Sensors</span>
+				</Button>
+			{/if}
 		</div>
 	</main>
 </div>

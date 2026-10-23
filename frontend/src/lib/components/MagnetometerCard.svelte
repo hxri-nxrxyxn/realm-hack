@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import { Magnet } from "lucide-svelte";
@@ -22,18 +21,13 @@
 				</div>
 				<div>
 					<Card.Title class="text-lg sm:text-xl font-bold tracking-tight">Magnetometer</Card.Title>
-					<Card.Description class="text-xs text-muted-foreground">Geomagnetic & Digital Compass</Card.Description>
+					<Card.Description class="text-xs text-muted-foreground">Geomagnetic Heading</Card.Description>
 				</div>
 			</div>
 
-			<Badge
-				variant="outline"
-				class={isAnomaly
-					? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200 text-xs font-semibold px-2.5 py-0.5"
-					: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-medium px-2.5 py-0.5"}
-			>
-				{isAnomaly ? "EMF Anomaly" : `${sensorManager.magnetometer.fieldStrength.toFixed(0)} µT`}
-			</Badge>
+			<div class="text-xs font-mono font-semibold text-emerald-400">
+				{isAnomaly ? "Anomaly" : `${sensorManager.magnetometer.fieldStrength.toFixed(0)} µT`}
+			</div>
 		</div>
 	</Card.Header>
 
@@ -48,7 +42,7 @@
 					<span class="text-5xl sm:text-6xl font-black tracking-tight text-foreground font-mono leading-none">
 						{Math.round(sensorManager.magnetometer.heading)}°
 					</span>
-					<span class="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-sm font-black text-emerald-300 font-mono ring-1 ring-emerald-500/30">
+					<span class="text-lg font-black text-emerald-300 font-mono">
 						{sensorManager.magnetometer.cardinal}
 					</span>
 				</div>
@@ -85,8 +79,8 @@
 			<span class="text-xs text-muted-foreground font-medium">Flux Stability</span>
 			<Sparkline
 				data={sensorManager.magHistory}
-				strokeColor="#059669"
-				fillColor="rgba(5, 150, 105, 0.15)"
+				strokeColor="#10b981"
+				fillColor="rgba(16, 185, 129, 0.15)"
 				height={36}
 				width={140}
 			/>

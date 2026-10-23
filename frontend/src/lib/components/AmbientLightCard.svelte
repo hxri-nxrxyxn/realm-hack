@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
@@ -11,28 +10,25 @@
 	);
 </script>
 
-<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-lime-500/40 rounded-2xl">
+<Card.Root class="relative overflow-hidden border-border/70 bg-card/90 shadow-md backdrop-blur-xl transition-all hover:border-emerald-500/40 rounded-2xl">
 	<!-- Ambient glow -->
-	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-lime-500/10 blur-2xl"></div>
+	<div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl"></div>
 
 	<Card.Header class="pb-2">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-3">
-				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-lime-500/15 text-lime-400 ring-1 ring-lime-500/30 shadow-sm">
+				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30 shadow-sm">
 					<SunMedium class="h-6 w-6" />
 				</div>
 				<div>
 					<Card.Title class="text-lg sm:text-xl font-bold tracking-tight">Ambient Light</Card.Title>
-					<Card.Description class="text-xs text-muted-foreground">Photometer Illuminance</Card.Description>
+					<Card.Description class="text-xs text-muted-foreground">Illuminance</Card.Description>
 				</div>
 			</div>
 
-			<Badge
-				variant="outline"
-				class="border-lime-500/30 bg-lime-500/10 text-lime-300 text-xs font-medium px-2.5 py-0.5"
-			>
+			<div class="text-xs font-mono font-semibold text-emerald-400">
 				{sensorManager.ambientLight.environment}
-			</Badge>
+			</div>
 		</div>
 	</Card.Header>
 
@@ -53,8 +49,8 @@
 			<div class="flex justify-end sm:justify-start">
 				<Sparkline
 					data={sensorManager.lightHistory}
-					strokeColor="#84cc16"
-					fillColor="rgba(132, 204, 22, 0.15)"
+					strokeColor="#10b981"
+					fillColor="rgba(16, 185, 129, 0.15)"
 					height={46}
 					width={140}
 				/>
@@ -65,34 +61,34 @@
 		<div class="space-y-2 rounded-xl bg-secondary/40 p-3 ring-1 ring-border/40">
 			<div class="flex justify-between items-center text-xs">
 				<span class="text-muted-foreground font-medium">Brightness Spectrum</span>
-				<span class="font-bold text-lime-400 font-mono text-sm">{luxProgress}%</span>
+				<span class="font-bold text-emerald-400 font-mono text-sm">{luxProgress}%</span>
 			</div>
 			<Progress value={luxProgress} class="h-2.5 bg-secondary/80" />
 		</div>
 
-		<!-- 3 Zone Indicators -->
+		<!-- 3 Zone Indicators in Emerald Gradient -->
 		<div class="grid grid-cols-3 gap-2.5 pt-1 text-center">
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux < 50 ? 'ring-lime-500/60 bg-lime-500/10' : 'ring-border/50'}">
+			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux < 50 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
 				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Dark / Night</div>
 				<div class="text-sm font-bold font-mono text-foreground mt-0.5">&lt;50 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux < 50 ? 'text-lime-400 font-bold' : 'text-muted-foreground'} mt-0.5">
-					{sensorManager.ambientLight.lux < 50 ? "● Active" : "Inactive"}
+				<div class="text-[10px] {sensorManager.ambientLight.lux < 50 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+					{sensorManager.ambientLight.lux < 50 ? "Active" : "Inactive"}
 				</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'ring-lime-500/60 bg-lime-500/10' : 'ring-border/50'}">
+			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
 				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Indoor Office</div>
 				<div class="text-sm font-bold font-mono text-foreground mt-0.5">50-1000 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'text-lime-400 font-bold' : 'text-muted-foreground'} mt-0.5">
-					{sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? "● Active" : "Inactive"}
+				<div class="text-[10px] {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+					{sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? "Active" : "Inactive"}
 				</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux > 1000 ? 'ring-lime-500/60 bg-lime-500/10' : 'ring-border/50'}">
+			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux > 1000 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
 				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Sunlight</div>
 				<div class="text-sm font-bold font-mono text-foreground mt-0.5">&gt;1000 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux > 1000 ? 'text-lime-400 font-bold' : 'text-muted-foreground'} mt-0.5">
-					{sensorManager.ambientLight.lux > 1000 ? "● Active" : "Inactive"}
+				<div class="text-[10px] {sensorManager.ambientLight.lux > 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+					{sensorManager.ambientLight.lux > 1000 ? "Active" : "Inactive"}
 				</div>
 			</div>
 		</div>

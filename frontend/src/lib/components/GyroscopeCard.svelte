@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import { Compass } from "lucide-svelte";
@@ -21,18 +20,13 @@
 				</div>
 				<div>
 					<Card.Title class="text-lg sm:text-xl font-bold tracking-tight">Gyroscope</Card.Title>
-					<Card.Description class="text-xs text-muted-foreground">Angular Velocity & Rotation</Card.Description>
+					<Card.Description class="text-xs text-muted-foreground">Angular Rate</Card.Description>
 				</div>
 			</div>
 
-			<Badge
-				variant="outline"
-				class={isSpinning
-					? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200 text-xs font-semibold px-2.5 py-0.5"
-					: "border-border bg-secondary/60 text-muted-foreground text-xs font-medium px-2.5 py-0.5"}
-			>
+			<div class="text-xs font-mono font-semibold {isSpinning ? 'text-emerald-400' : 'text-muted-foreground'}">
 				{isSpinning ? "Active Spin" : "Stationary"}
-			</Badge>
+			</div>
 		</div>
 	</Card.Header>
 
@@ -62,7 +56,7 @@
 			</div>
 		</div>
 
-		<!-- 3-Axis Rotation Cards in Shades of Green -->
+		<!-- 3-Axis Rotation Cards in Emerald Gradient -->
 		<div class="grid grid-cols-3 gap-2.5 pt-1">
 			<!-- Pitch X -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
@@ -77,7 +71,7 @@
 
 			<!-- Roll Y -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-teal-400 uppercase tracking-wider mb-1">
+				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
 					Roll (Y)
 				</div>
 				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
@@ -88,7 +82,7 @@
 
 			<!-- Yaw Z -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-green-400 uppercase tracking-wider mb-1">
+				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
 					Yaw (Z)
 				</div>
 				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">

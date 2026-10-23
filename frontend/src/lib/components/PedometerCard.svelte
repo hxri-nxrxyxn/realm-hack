@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
@@ -25,19 +24,13 @@
 				</div>
 				<div>
 					<Card.Title class="text-lg sm:text-xl font-bold tracking-tight">Pedometer</Card.Title>
-					<Card.Description class="text-xs text-muted-foreground">Step Counter & Movement</Card.Description>
+					<Card.Description class="text-xs text-muted-foreground">Step Counter</Card.Description>
 				</div>
 			</div>
 
-			<Badge
-				variant="outline"
-				class={isWalking
-					? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-semibold px-2.5 py-0.5"
-					: "border-border bg-secondary/60 text-muted-foreground text-xs font-medium px-2.5 py-0.5"}
-			>
-				<span class="mr-1.5 h-1.5 w-1.5 rounded-full {isWalking ? 'bg-emerald-400' : 'bg-muted-foreground'}"></span>
+			<div class="text-xs font-mono font-semibold {isWalking ? 'text-emerald-400' : 'text-muted-foreground'}">
 				{isWalking ? "Active" : "Idle"}
-			</Badge>
+			</div>
 		</div>
 	</Card.Header>
 
@@ -72,7 +65,7 @@
 			<Progress value={stepProgress} class="h-2.5 bg-secondary/80" />
 		</div>
 
-		<!-- 3 Stat Metrics Grid -->
+		<!-- 3 Stat Metrics Grid in Emerald Gradient -->
 		<div class="grid grid-cols-3 gap-2.5 pt-1">
 			<!-- Distance -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
@@ -88,7 +81,7 @@
 
 			<!-- Calories -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-lime-400 mb-1">
+				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400 mb-1">
 					<Flame class="h-3.5 w-3.5" />
 					<span>Calories</span>
 				</div>
@@ -100,7 +93,7 @@
 
 			<!-- Detector Cadence -->
 			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-teal-400 mb-1">
+				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400 mb-1">
 					<Zap class="h-3.5 w-3.5" />
 					<span>Detected</span>
 				</div>

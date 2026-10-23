@@ -3,7 +3,6 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
 	import { Button } from "#lib/components/ui/button/index.js";
-	import { Badge } from "#lib/components/ui/badge/index.js";
 	import { sendSms } from "#lib/services/smsService.js";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import { Send, MessageSquare, Phone, CheckCircle2, AlertCircle, Sparkles } from "lucide-svelte";
@@ -58,13 +57,9 @@
 				</div>
 				<div>
 					<Card.Title class="text-lg sm:text-xl font-bold tracking-tight">Direct SMS Alert</Card.Title>
-					<Card.Description class="text-xs text-muted-foreground">Send real-time alerts & coordinates</Card.Description>
+					<Card.Description class="text-xs text-muted-foreground">Emergency Messaging</Card.Description>
 				</div>
 			</div>
-
-			<Badge variant="outline" class="border-primary/30 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-0.5">
-				SMS Relay
-			</Badge>
 		</div>
 	</Card.Header>
 
@@ -74,7 +69,7 @@
 			<label for="sms-phone-input" class="text-xs font-semibold text-foreground flex items-center justify-between">
 				<span class="flex items-center gap-1.5">
 					<Phone class="h-3.5 w-3.5 text-muted-foreground" />
-					Recipient Phone Number
+					Recipient Phone
 				</span>
 				<span class="text-[11px] text-muted-foreground font-normal">Default: 9995283835</span>
 			</label>
@@ -94,7 +89,7 @@
 			<div class="flex items-center justify-between">
 				<label for="sms-message-input" class="text-xs font-semibold text-foreground flex items-center gap-1.5">
 					<MessageSquare class="h-3.5 w-3.5 text-muted-foreground" />
-					Message Content
+					Message
 				</label>
 				<button
 					type="button"
@@ -139,7 +134,7 @@
 			onclick={handleSend}
 		>
 			<Send class="h-4 w-4" />
-			<span>{isSending ? "Sending SMS..." : "Send SMS Now"}</span>
+			<span>{isSending ? "Sending SMS..." : "Send SMS"}</span>
 		</Button>
 	</Card.Content>
 </Card.Root>
