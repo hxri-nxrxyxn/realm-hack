@@ -1,52 +1,32 @@
-# RakshaNet Call App 📱
+# realm-hack
 
-A modern cross-platform Capacitor app featuring a phone dialer input box with the placeholder `9995283835` and an instant call button.
+Monorepo / project workspace for the hackathon.
 
-## ✨ Features
+## Projects
 
-- **Phone Number Input**: Number input with `placeholder="9995283835"`. Accepts numeric input, `+`, `*`, and `#`.
-- **Direct Dial Button**: One-tap Call button that triggers the native phone dialer for the entered number or falls back to `9995283835`.
-- **Integrated Keypad**: On-screen keypad (1-9, *, 0, #) with tactile feedback, backspace, and quick-clear controls.
-- **Capacitor Mobile Ready**: Pre-configured for Android (`@capacitor/android`) and Web/PWA.
-- **Cross-Platform Support**: Works seamlessly on Web, Android WebView, and iOS.
+- [**rakshanet/**](./rakshanet): Capacitor quick-dial mobile & web app featuring a custom phone dialer with placeholder `9995283835` and one-tap calling.
 
----
+## Quick Start (RakshaNet)
 
-## 🚀 Getting Started
+You can run the app directly from the root:
 
-### 1. Run Development Server (Web / Browser)
 ```bash
+# Start development server
+npm run dev
+
+# Build web distribution
+npm run build
+
+# Sync assets to Capacitor Android
+npm run cap:sync
+
+# Open in Android Studio
+npm run cap:open
+```
+
+Or change directory directly into [`rakshanet/`](./rakshanet):
+
+```bash
+cd rakshanet
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 2. Build the Web App
-```bash
-npm run build
-```
-
-### 3. Sync with Capacitor (Android)
-```bash
-npm run cap:sync
-```
-
-### 4. Open in Android Studio
-```bash
-npm run cap:open
-# or
-npx cap open android
-```
-
-### 5. Run Directly on Connected Android Device or Emulator
-```bash
-npm run cap:android
-```
-
----
-
-## 🛠️ Project Structure
-
-- [`src/App.tsx`](file:///home/sujith/rakshanet/src/App.tsx): Main dialer component containing the phone input, placeholder `9995283835`, and call handling.
-- [`src/index.css`](file:///home/sujith/rakshanet/src/index.css): Responsive dark/modern styles optimized for mobile touchscreens and desktop.
-- [`capacitor.config.ts`](file:///home/sujith/rakshanet/capacitor.config.ts): Capacitor configuration file.
-- [`android/`](file:///home/sujith/rakshanet/android): Native Android Gradle project ready to build into an APK or AAB.

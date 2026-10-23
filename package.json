@@ -1,29 +1,13 @@
 {
-  "name": "rakshanet-call-app",
+  "name": "realm-hack",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "cap:sync": "npm run build && npx cap sync",
-    "cap:android": "npm run build && npx cap run android",
-    "cap:open": "npx cap open android"
-  },
-  "dependencies": {
-    "@capacitor/android": "^8.5.3",
-    "@capacitor/cli": "^8.5.3",
-    "@capacitor/core": "^8.5.3",
-    "lucide-react": "^1.61.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "typescript": "^5.7.3",
-    "vite": "^8.3.5"
+    "dev": "npm --prefix rakshanet run dev",
+    "build": "npm --prefix rakshanet run build",
+    "preview": "npm --prefix rakshanet run preview",
+    "cap:sync": "npm --prefix rakshanet run cap:sync",
+    "cap:android": "npm --prefix rakshanet run cap:android",
+    "cap:open": "npm --prefix rakshanet run cap:open"
   }
 }
