@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, MessageSquare, CheckCircle2, AlertCircle, Wifi, WifiOff, Settings2 } from 'lucide-react';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
 interface DirectSmsPlugin {
@@ -10,24 +10,34 @@ const DirectSms = registerPlugin<DirectSmsPlugin>('DirectSms');
 
 export default function App() {
   const defaultPlaceholder = '9995283835';
+  const defaultServerUrl = 'ws://192.168.2.38:8765';
 
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [message, setMessage] = useState<string>('Hello from RakshaNet!');
+  const [message, setMessage] = useState<string>('🚨 Alert: Automated response from RakshaNet. Received your call!');
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [isSending, setIsSending] = useState<boolean>(false);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // WebSocket configuration & state
+  const [serverUrl, setServerUrl] = useState<string>(() => {
+    return localStorage.getItem('rakshanet_ws_url') || defaultServerUrl;
+  });
+  const [wsConnected, setWsConnected] = useState<boolean>(false);
+  const [autoSend, setAutoSend] = useState<boolean>(true);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
-    const rawNumber = phoneNumber.trim() || defaultPlaceholder;
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+
+  // Function to send SMS
+  const sendSmsMessage = async (targetNumber: string, content: string, isAutomated = false) => {
+    const rawNumber = targetNumber.trim() || defaultPlaceholder;
     const sanitizedNumber = rawNumber.replace(/[^0-9+*#]/g, '');
-    const messageContent = message.trim();
+    const messageContent = content.trim();
 
     if (!sanitizedNumber) {
       setStatusMessage({ text: 'Please enter a valid phone number', type: 'error' });
       return;
     }
-
     if (!messageContent) {
       setStatusMessage({ text: 'Please enter a message to send', type: 'error' });
       return;
@@ -44,9 +54,21 @@ export default function App() {
         });
 
         setStatusMessage({
-          text: `Message sent to ${rawNumber}!`,
+          text: isAutomated
+            ? `⚡ Auto-sent SMS to ${rawNumber}!`
+            : `Message sent to ${rawNumber}!`,
           type: 'success',
         });
+
+        // Notify WebSocket server of successful send
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({
+            type: 'SMS_SENT',
+            number: rawNumber,
+            automated: isAutomated,
+            timestamp: new Date().toISOString(),
+          }));
+        }
       } catch (err: unknown) {
         console.error('Direct SMS error:', err);
         const errorMsg = err instanceof Error ? err.message : String(err);
@@ -58,11 +80,11 @@ export default function App() {
         setIsSending(false);
       }
     } else {
-      // Browser fallback via sms: protocol
+      // Browser fallback
       try {
         window.location.href = `sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`;
         setStatusMessage({
-          text: `SMS opened for ${rawNumber}`,
+          text: `SMS link opened for ${rawNumber}`,
           type: 'success',
         });
       } catch (err) {
@@ -74,19 +96,155 @@ export default function App() {
     }
   };
 
+  // WebSocket connection management
+  useEffect(() => {
+    let isCancelled = false;
+
+    const connectWebSocket = () => {
+      if (isCancelled) return;
+
+      try {
+        const ws = new WebSocket(serverUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (isCancelled) return;
+          setWsConnected(true);
+          console.log('Connected to WebSocket server:', serverUrl);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('WS Message received:', data);
+
+            if (data.type === 'CALL_DETECTED' && data.number) {
+              const incomingNumber = data.number;
+              setPhoneNumber(incomingNumber);
+
+              // Auto-send SMS if enabled
+              if (autoSend) {
+                sendSmsMessage(incomingNumber, message, true);
+              } else {
+                setStatusMessage({
+                  text: `Call detected: ${incomingNumber}. Tap Send to dispatch.`,
+                  type: 'success',
+                });
+              }
+            } else if (data.type === 'SERVER_READY') {
+              if (data.last_number && !phoneNumber) {
+                setPhoneNumber(data.last_number);
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse WS message:', e);
+          }
+        };
+
+        ws.onclose = () => {
+          if (isCancelled) return;
+          setWsConnected(false);
+          // Schedule reconnect in 3s
+          reconnectTimeoutRef.current = window.setTimeout(connectWebSocket, 3000);
+        };
+
+        ws.onerror = (err) => {
+          console.warn('WS Error:', err);
+          ws.close();
+        };
+      } catch (err) {
+        console.error('WS Connection initiation error:', err);
+        reconnectTimeoutRef.current = window.setTimeout(connectWebSocket, 3000);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isCancelled = true;
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [serverUrl, autoSend, message]);
+
+  const handleManualSend = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    sendSmsMessage(phoneNumber, message, false);
+  };
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('rakshanet_ws_url', serverUrl);
+    setShowSettings(false);
+    if (wsRef.current) wsRef.current.close(); // trigger reconnect with new URL
+  };
+
   return (
     <div className="app-container">
       <main className="dialer-card">
         {/* Minimal Header */}
         <header className="app-header">
-          <div className="logo-badge">
-            <MessageSquare size={24} />
+          <div className="header-top-row">
+            <div className="logo-badge">
+              <MessageSquare size={22} />
+            </div>
+            <button
+              type="button"
+              className="icon-settings-btn"
+              onClick={() => setShowSettings(!showSettings)}
+              title="WebSocket Settings"
+              aria-label="Settings"
+            >
+              <Settings2 size={18} />
+            </button>
           </div>
           <h1 className="title">RakshaNet</h1>
+
+          {/* WebSocket Connection Status Pill */}
+          <div className={`ws-status-pill ${wsConnected ? 'connected' : 'disconnected'}`}>
+            {wsConnected ? <Wifi size={13} /> : <WifiOff size={13} />}
+            <span>{wsConnected ? `Online: ${serverUrl.replace('ws://', '')}` : 'Connecting to Server...'}</span>
+          </div>
         </header>
 
+        {/* Settings Drawer (if toggled) */}
+        {showSettings && (
+          <form onSubmit={handleSaveSettings} className="settings-box">
+            <label className="field-label" htmlFor="server-url-input">
+              Server WebSocket URL:
+            </label>
+            <div className="settings-input-row">
+              <input
+                id="server-url-input"
+                type="text"
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
+                placeholder="ws://192.168.2.38:8765"
+                className="settings-input"
+              />
+              <button type="submit" className="settings-save-btn">
+                Save
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Auto-Send Toggle */}
+        <div className="toggle-row">
+          <label className="toggle-label" htmlFor="autosend-checkbox">
+            <input
+              id="autosend-checkbox"
+              type="checkbox"
+              checked={autoSend}
+              onChange={(e) => setAutoSend(e.target.checked)}
+              className="toggle-checkbox"
+            />
+            <span className="toggle-text">⚡ Auto-send SMS on incoming call</span>
+          </label>
+        </div>
+
         {/* Minimal Form */}
-        <form onSubmit={handleSendMessage} className="dialer-form">
+        <form onSubmit={handleManualSend} className="dialer-form">
           <div className="input-group">
             <input
               id="phone-input"
@@ -130,7 +288,7 @@ export default function App() {
             <div className="call-btn-inner">
               <Send size={18} className={isSending ? 'anim-spin' : ''} />
               <span className="call-text">
-                {isSending ? 'Sending...' : 'Send Message'}
+                {isSending ? 'Sending...' : 'Send Message Now'}
               </span>
             </div>
           </button>
