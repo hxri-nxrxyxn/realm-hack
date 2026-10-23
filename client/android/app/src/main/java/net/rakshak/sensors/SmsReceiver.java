@@ -1,5 +1,6 @@
 package net.rakshak.sensors;
 
+import android.app.ActivityOptions;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -363,18 +364,47 @@ public class SmsReceiver extends BroadcastReceiver {
     }
 
     private void launchMainActivity(Context context, String sender, String message) {
+        Intent launchIntent = new Intent(context, MainActivity.class);
+        launchIntent.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_CLEAR_TOP |
+            Intent.FLAG_ACTIVITY_SINGLE_TOP |
+            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        );
+        launchIntent.putExtra("sms_sender", sender);
+        launchIntent.putExtra("sms_message", message);
+
+        // 1. Try PendingIntent with background activity start mode allowed (Android 10 - 14+)
         try {
-            Intent launchIntent = new Intent(context, MainActivity.class);
-            launchIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                Intent.FLAG_ACTIVITY_SINGLE_TOP |
-                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent pi = PendingIntent.getActivity(
+                context,
+                URGENT_NOTIFICATION_ID + 50,
+                launchIntent,
+                flags
             );
-            launchIntent.putExtra("sms_sender", sender);
-            launchIntent.putExtra("sms_message", message);
+
+            if (Build.VERSION.SDK_INT >= 34) { // Android 14+
+                ActivityOptions options = ActivityOptions.makeBasic();
+                options.setPendingIntentBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                );
+                pi.send(context, 0, null, null, null, null, options.toBundle());
+            } else {
+                pi.send();
+            }
+            Log.d(TAG, "Launched MainActivity via PendingIntent.send()");
+        } catch (Exception e) {
+            Log.e(TAG, "PendingIntent launch failed", e);
+        }
+
+        // 2. Also execute direct startActivity with NEW_TASK & REORDER_TO_FRONT
+        try {
             context.startActivity(launchIntent);
-            Log.d(TAG, "startActivity called for MainActivity");
+            Log.d(TAG, "Launched MainActivity via context.startActivity()");
         } catch (Exception e) {
             Log.e(TAG, "Direct startActivity failed", e);
         }

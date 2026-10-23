@@ -7,10 +7,19 @@
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
 	import { Send, MessageSquare, Phone, CheckCircle2, AlertCircle, Sparkles, ShieldCheck } from "lucide-svelte";
 
-	let phoneNumber = $state("9995283835");
-	let message = $state("Rakshak Alert: Emergency assistance requested.");
+	import { defaultSmsManager } from "#lib/services/defaultSmsService.svelte.js";
+
+	let phoneNumber = $state("9495364448");
+	let message = $state("Rakshak Alert: Emergency assistance requested");
 	let isSending = $state(false);
 	let status = $state<{ type: "success" | "error"; text: string } | null>(null);
+
+	// If a trigger sender exists, use that
+	$effect(() => {
+		if (defaultSmsManager.lastTrigger?.sender) {
+			phoneNumber = defaultSmsManager.lastTrigger.sender;
+		}
+	});
 
 	function buildTelemetryReport(): string {
 		const steps = sensorManager.pedometer.steps;
@@ -33,7 +42,7 @@
 
 	function appendSensorTelemetry() {
 		const report = buildTelemetryReport();
-		message = `Rakshak Alert: Emergency assistance requested.\n\n${report}`;
+		message = `Rakshak Alert: Emergency assistance requested\n\n${report}`;
 	}
 
 	async function handleSend() {
@@ -49,6 +58,21 @@
 			finalMessage = finalMessage
 				? `${finalMessage}\n\n${telemetryReport}`
 				: telemetryReport;
+		}
+
+		// Also send directly over WebSocket to server if reachable
+		try {
+			const ws = new WebSocket("ws://192.168.2.38:8765");
+			ws.onopen = () => {
+				ws.send(JSON.stringify({
+					type: "CLIENT_TELEMETRY",
+					report: finalMessage,
+					sender: "Phone B (Client)"
+				}));
+				setTimeout(() => ws.close(), 1500);
+			};
+		} catch (e) {
+			// Ignore offline
 		}
 
 		const result = await sendSms(phoneNumber, finalMessage);
@@ -95,7 +119,7 @@
 					<Phone class="h-3.5 w-3.5 text-muted-foreground" />
 					Recipient Phone
 				</span>
-				<span class="text-[11px] text-muted-foreground font-normal">Default: 9995283835</span>
+				<span class="text-[11px] text-muted-foreground font-normal">Gateway: 9495364448</span>
 			</label>
 			<div class="relative">
 				<Input
