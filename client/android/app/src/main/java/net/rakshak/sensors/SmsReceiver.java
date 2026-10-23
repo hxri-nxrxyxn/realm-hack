@@ -13,6 +13,7 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -336,12 +337,21 @@ public class SmsReceiver extends BroadcastReceiver {
                 flags |= PendingIntent.FLAG_IMMUTABLE;
             }
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(
-                context,
-                URGENT_NOTIFICATION_ID,
-                activityIntent,
-                flags
-            );
+            Bundle optsBundle = null;
+            if (Build.VERSION.SDK_INT >= 34) { // Android 14+
+                ActivityOptions options = ActivityOptions.makeBasic();
+                options.setPendingIntentBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                );
+                options.setPendingIntentCreatorBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                );
+                optsBundle = options.toBundle();
+            }
+
+            PendingIntent pendingIntent = (optsBundle != null)
+                ? PendingIntent.getActivity(context, URGENT_NOTIFICATION_ID, activityIntent, flags, optsBundle)
+                : PendingIntent.getActivity(context, URGENT_NOTIFICATION_ID, activityIntent, flags);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, URGENT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -374,25 +384,30 @@ public class SmsReceiver extends BroadcastReceiver {
         launchIntent.putExtra("sms_sender", sender);
         launchIntent.putExtra("sms_message", message);
 
+        Bundle optsBundle = null;
+        if (Build.VERSION.SDK_INT >= 34) { // Android 14+
+            ActivityOptions options = ActivityOptions.makeBasic();
+            options.setPendingIntentBackgroundActivityStartMode(
+                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+            );
+            options.setPendingIntentCreatorBackgroundActivityStartMode(
+                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+            );
+            optsBundle = options.toBundle();
+        }
+
         // 1. Try PendingIntent with background activity start mode allowed (Android 10 - 14+)
         try {
             int flags = PendingIntent.FLAG_UPDATE_CURRENT;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 flags |= PendingIntent.FLAG_IMMUTABLE;
             }
-            PendingIntent pi = PendingIntent.getActivity(
-                context,
-                URGENT_NOTIFICATION_ID + 50,
-                launchIntent,
-                flags
-            );
+            PendingIntent pi = (optsBundle != null)
+                ? PendingIntent.getActivity(context, URGENT_NOTIFICATION_ID + 50, launchIntent, flags, optsBundle)
+                : PendingIntent.getActivity(context, URGENT_NOTIFICATION_ID + 50, launchIntent, flags);
 
-            if (Build.VERSION.SDK_INT >= 34) { // Android 14+
-                ActivityOptions options = ActivityOptions.makeBasic();
-                options.setPendingIntentBackgroundActivityStartMode(
-                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
-                );
-                pi.send(context, 0, null, null, null, null, options.toBundle());
+            if (optsBundle != null) {
+                pi.send(context, 0, null, null, null, null, optsBundle);
             } else {
                 pi.send();
             }
@@ -401,9 +416,13 @@ public class SmsReceiver extends BroadcastReceiver {
             Log.e(TAG, "PendingIntent launch failed", e);
         }
 
-        // 2. Also execute direct startActivity with NEW_TASK & REORDER_TO_FRONT
+        // 2. Also execute direct startActivity with NEW_TASK & REORDER_TO_FRONT with options bundle
         try {
-            context.startActivity(launchIntent);
+            if (optsBundle != null) {
+                context.startActivity(launchIntent, optsBundle);
+            } else {
+                context.startActivity(launchIntent);
+            }
             Log.d(TAG, "Launched MainActivity via context.startActivity()");
         } catch (Exception e) {
             Log.e(TAG, "Direct startActivity failed", e);
