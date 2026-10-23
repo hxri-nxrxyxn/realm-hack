@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { Send, MessageSquare, CheckCircle2, AlertCircle, Wifi, WifiOff, Settings2 } from '@lucide/svelte';
+  import Send from '@lucide/svelte/icons/send';
+  import Settings2 from '@lucide/svelte/icons/settings-2';
+  import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import { Capacitor, registerPlugin } from '@capacitor/core';
 
   interface DirectSmsPlugin {
@@ -12,9 +14,16 @@
   const defaultPlaceholder = '9995283835';
   const defaultServerUrl = 'ws://192.168.2.38:8765';
 
+  const promptPresets = [
+    { emoji: '🚨', label: 'Emergency', text: '🚨 Alert: Automated response from RakshaNet. Received your call!' },
+    { emoji: '🚗', label: 'In Transit', text: '🚗 Auto-reply: Currently driving / in transit. Will call you back shortly.' },
+    { emoji: '🛑', label: 'Busy', text: '🛑 Auto-reply: In an important meeting. Please text if urgent.' },
+    { emoji: '🤖', label: 'AI Agent', text: '🤖 RakshaNet AI: Incoming call logged. Telephony daemon active.' }
+  ];
+
   let phoneNumber = $state('');
-  let message = $state('🚨 Alert: Automated response from RakshaNet. Received your call!');
-  let statusMessage = $state<{ text: string; type: 'success' | 'error' } | null>(null);
+  let message = $state(promptPresets[0].text);
+  let statusMessage = $state<{ text: string; type: 'success' | 'error'; emoji: string } | null>(null);
   let isSending = $state(false);
 
   let serverUrl = $state(defaultServerUrl);
@@ -32,11 +41,11 @@
     const messageContent = content.trim();
 
     if (!sanitizedNumber) {
-      statusMessage = { text: 'Please enter a valid phone number', type: 'error' };
+      statusMessage = { text: 'Enter a valid target number', type: 'error', emoji: '⚠️' };
       return;
     }
     if (!messageContent) {
-      statusMessage = { text: 'Please enter a message to send', type: 'error' };
+      statusMessage = { text: 'Response message cannot be empty', type: 'error', emoji: '⚠️' };
       return;
     }
 
@@ -51,8 +60,9 @@
         });
 
         statusMessage = {
-          text: isAutomated ? `⚡ Auto-sent SMS to ${rawNumber}!` : `Message sent to ${rawNumber}!`,
+          text: isAutomated ? `Auto-dispatched SMS to ${rawNumber}` : `Dispatched SMS to ${rawNumber}`,
           type: 'success',
+          emoji: '✅'
         };
 
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -66,14 +76,14 @@
       } catch (err: unknown) {
         console.error('Direct SMS error:', err);
         const errorMsg = err instanceof Error ? err.message : String(err);
-        statusMessage = { text: errorMsg || 'Failed to send SMS', type: 'error' };
+        statusMessage = { text: errorMsg || 'Failed to dispatch SMS', type: 'error', emoji: '❌' };
       } finally {
         isSending = false;
       }
     } else {
       try {
         window.location.href = `sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`;
-        statusMessage = { text: `SMS link opened for ${rawNumber}`, type: 'success' };
+        statusMessage = { text: `SMS intent dispatched for ${rawNumber}`, type: 'success', emoji: '💬' };
       } catch (err) {
         console.error('Web SMS error:', err);
         window.open(`sms:${sanitizedNumber}?body=${encodeURIComponent(messageContent)}`, '_system');
@@ -109,7 +119,7 @@
 
             const now = Date.now();
             if (lastAutoSent && lastAutoSent.number === incomingNumber && now - lastAutoSent.time < 15000) {
-              console.log('Debounced: Ignoring duplicate CALL_DETECTED within 15s');
+              console.log('Debounced duplicate CALL_DETECTED within 15s');
               return;
             }
 
@@ -119,8 +129,9 @@
               sendSmsMessage(incomingNumber, message, true);
             } else {
               statusMessage = {
-                text: `Call detected: ${incomingNumber}. Tap Send to dispatch.`,
+                text: `Call detected from ${incomingNumber}. Tap Dispatch to send.`,
                 type: 'success',
+                emoji: '📞'
               };
             }
           } else if (data.type === 'SERVER_READY') {
@@ -174,77 +185,130 @@
     showSettings = false;
     connectWebSocket();
   }
+
+  function selectPreset(presetText: string) {
+    message = presetText;
+    statusMessage = null;
+  }
+
+  function resetNumber() {
+    phoneNumber = defaultPlaceholder;
+    statusMessage = null;
+  }
 </script>
 
 <div class="app-container">
-  <main class="dialer-card">
-    <!-- Minimal Header -->
-    <header class="app-header">
-      <div class="header-top-row">
-        <div class="logo-badge">
-          <MessageSquare size={22} />
+  <main class="mono-card">
+    <!-- Top Pill Bar -->
+    <header class="top-bar">
+      <div class="pill pill-status {wsConnected ? 'online' : 'offline'}">
+        <span class="status-dot {wsConnected ? 'active' : 'inactive'}"></span>
+        <span>{wsConnected ? `🟢 ${serverUrl.replace('ws://', '')}` : '⚪ CONNECTING...'}</span>
+      </div>
+
+      <div style="display: flex; gap: 0.35rem; align-items: center;">
+        <div class="pill pill-sm pill-tag">
+          <span>🤖 v2.0</span>
         </div>
         <button
           type="button"
-          class="icon-settings-btn"
+          class="icon-pill-btn"
           onclick={() => (showSettings = !showSettings)}
-          title="WebSocket Settings"
+          title="Server Settings"
           aria-label="Settings"
         >
-          <Settings2 size={18} />
+          <Settings2 size={16} />
         </button>
-      </div>
-      <h1 class="title">RakshaNet</h1>
-
-      <!-- WebSocket Connection Status Pill -->
-      <div class="ws-status-pill {wsConnected ? 'connected' : 'disconnected'}">
-        {#if wsConnected}
-          <Wifi size={13} />
-          <span>Online: {serverUrl.replace('ws://', '')}</span>
-        {:else}
-          <WifiOff size={13} />
-          <span>Connecting to Server...</span>
-        {/if}
       </div>
     </header>
 
-    <!-- Settings Drawer (if toggled) -->
+    <!-- Header Title Section -->
+    <div class="title-section">
+      <h1 class="hero-title">
+        <span>🛡️</span>
+        <span>RAKSHANET</span>
+      </h1>
+      <p class="hero-subtitle">
+        <span>⚡ Bluetooth Telephony Daemon</span>
+      </p>
+    </div>
+
+    <!-- Settings Drawer (Collapsible) -->
     {#if showSettings}
-      <form onsubmit={handleSaveSettings} class="settings-box">
-        <label class="field-label" for="server-url-input">
-          Server WebSocket URL:
-        </label>
+      <form onsubmit={handleSaveSettings} class="settings-drawer">
+        <div class="pill-carousel-label">
+          <span>⚙️</span>
+          <span>WEBSOCKET ENDPOINT</span>
+        </div>
         <div class="settings-input-row">
           <input
-            id="server-url-input"
             type="text"
             bind:value={serverUrl}
             placeholder="ws://192.168.2.38:8765"
             class="settings-input"
           />
-          <button type="submit" class="settings-save-btn">
-            Save
+          <button type="submit" class="settings-save-pill">
+            <span>💾 Save</span>
           </button>
         </div>
       </form>
     {/if}
 
-    <!-- Auto-Send Toggle -->
-    <div class="toggle-row">
-      <label class="toggle-label" for="autosend-checkbox">
-        <input
-          id="autosend-checkbox"
-          type="checkbox"
-          bind:checked={autoSend}
-          class="toggle-checkbox"
-        />
-        <span class="toggle-text">⚡ Auto-send SMS on incoming call</span>
-      </label>
+    <!-- Quick Prompt Pills Carousel -->
+    <section class="pill-carousel-section">
+      <div class="pill-carousel-label">
+        <span>💡</span>
+        <span>AI QUICK PROMPTS</span>
+      </div>
+      <div class="pill-chips-row">
+        {#each promptPresets as preset}
+          <button
+            type="button"
+            class="chip-btn {message === preset.text ? 'active' : ''}"
+            onclick={() => selectPreset(preset.text)}
+          >
+            <span>{preset.emoji}</span>
+            <span>{preset.label}</span>
+          </button>
+        {/each}
+      </div>
+    </section>
+
+    <!-- Auto-Dispatch Toggle Pill -->
+    <div class="toggle-pill-card">
+      <div class="toggle-info">
+        <span>⚡</span>
+        <span>Auto-dispatch on call</span>
+      </div>
+      <button
+        type="button"
+        class="toggle-switch-btn {autoSend ? 'on' : 'off'}"
+        onclick={() => (autoSend = !autoSend)}
+      >
+        <span>{autoSend ? 'ACTIVE 🟢' : 'MUTED ⚪'}</span>
+      </button>
     </div>
 
-    <!-- Minimal Form -->
-    <form onsubmit={handleManualSend} class="dialer-form">
-      <div class="input-group">
+    <!-- Monospace Input Form -->
+    <form onsubmit={handleManualSend} class="mono-form">
+      <!-- Target Number Field -->
+      <div class="input-container">
+        <div class="input-header-row">
+          <span class="input-label">
+            <span>📞</span>
+            <span>TARGET RECIPIENT</span>
+          </span>
+          <button
+            type="button"
+            class="chip-btn"
+            style="padding: 0.15rem 0.5rem; font-size: 0.68rem;"
+            onclick={resetNumber}
+            title="Reset to default number"
+          >
+            <RotateCcw size={11} />
+            <span>DEFAULT</span>
+          </button>
+        </div>
         <input
           id="phone-input"
           type="tel"
@@ -253,50 +317,73 @@
           bind:value={phoneNumber}
           oninput={() => (statusMessage = null)}
           placeholder={defaultPlaceholder}
-          class="phone-input"
-          aria-label="Phone Number"
+          class="mono-input"
+          aria-label="Target Phone Number"
         />
       </div>
 
-      <div class="input-group">
+      <!-- Response Prompt Field -->
+      <div class="input-container">
+        <div class="input-header-row">
+          <span class="input-label">
+            <span>💬</span>
+            <span>RESPONSE PROMPT</span>
+          </span>
+          <span class="pill pill-sm pill-tag">
+            {message.length} CHARS
+          </span>
+        </div>
         <textarea
           id="message-input"
           rows={3}
           bind:value={message}
           oninput={() => (statusMessage = null)}
-          placeholder="Enter message..."
-          class="message-textarea"
-          aria-label="Message"
+          placeholder="Enter response message..."
+          class="mono-textarea"
+          aria-label="Response Message"
         ></textarea>
       </div>
 
-      <!-- Send Button -->
+      <!-- Primary White Pill Action Button -->
       <button
         type="submit"
         id="send-button"
-        class="call-btn"
+        class="primary-pill-btn"
         disabled={isSending}
-        aria-label="Send Message"
+        aria-label="Dispatch SMS"
       >
-        <div class="call-btn-inner">
-          <Send size={18} class={isSending ? 'anim-spin' : ''} />
-          <span class="call-text">
-            {isSending ? 'Sending...' : 'Send Message Now'}
-          </span>
-        </div>
+        {#if isSending}
+          <span class="anim-spin">⏳</span>
+          <span>DISPATCHING...</span>
+        {:else}
+          <Send size={16} />
+          <span>DISPATCH SMS NOW →</span>
+        {/if}
       </button>
     </form>
 
-    <!-- Status Toast -->
+    <!-- Status Toast Pill -->
     {#if statusMessage}
-      <div class="status-toast {statusMessage.type}" role="status">
-        {#if statusMessage.type === 'success'}
-          <CheckCircle2 size={16} />
-        {:else}
-          <AlertCircle size={16} />
-        {/if}
+      <div class="status-pill-toast {statusMessage.type}" role="status">
+        <span>{statusMessage.emoji}</span>
         <span>{statusMessage.text}</span>
       </div>
     {/if}
+
+    <!-- Telemetry Footer Pills -->
+    <footer class="telemetry-footer">
+      <div class="pill pill-sm pill-tag">
+        <span>🧠 PIPEWIRE</span>
+      </div>
+      <div class="pill pill-sm pill-tag">
+        <span>🛡️ HFP HELVUM</span>
+      </div>
+      <div class="pill pill-sm pill-tag">
+        <span>⏱️ 15S COOLDOWN</span>
+      </div>
+      <div class="pill pill-sm pill-tag">
+        <span>🔒 LOCAL LINK</span>
+      </div>
+    </footer>
   </main>
 </div>

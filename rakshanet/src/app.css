@@ -1,14 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
 :root {
-  --bg-primary: #0a0f1d;
-  --bg-card: #131c31;
-  --bg-input: #0a0f1d;
-  --border-color: #23304d;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent-green: #10b981;
-  --accent-green-hover: #059669;
-  --accent-green-glow: rgba(16, 185, 129, 0.35);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --bg-page: #000000;
+  --bg-surface: #09090b;
+  --bg-surface-elevated: #121215;
+  --bg-input: #030303;
+  --bg-pill: rgba(255, 255, 255, 0.05);
+  --bg-pill-hover: rgba(255, 255, 255, 0.1);
+  --bg-pill-active: #ffffff;
+  
+  --border-subtle: #27272a;
+  --border-strong: #3f3f46;
+  --border-pill: rgba(255, 255, 255, 0.12);
+
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #e4e4e7;
+
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -20,330 +35,491 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-input, textarea {
-  user-select: text;
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
-#root {
+.app-layout {
   width: 100%;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: var(--bg-page);
 }
 
 .app-container {
   width: 100%;
-  max-width: 410px;
+  max-width: 440px;
+  min-height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
   padding: 1.25rem 1rem;
 }
 
-.dialer-card {
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.08);
-  padding: 1.75rem 1.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+@media (min-height: 700px) {
+  .app-container {
+    justify-content: center;
+  }
 }
 
-.app-header {
-  text-align: center;
+/* Card Container */
+.mono-card {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  padding: 1.5rem 1.25rem;
   display: flex;
   flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Header & Top Bar */
+.top-bar {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
   gap: 0.4rem;
+  margin-top: 0.25rem;
 }
 
-.header-top-row {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.logo-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 95, 70, 0.2));
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: var(--accent-green);
-}
-
-.icon-settings-btn {
-  position: absolute;
-  right: 0;
-  top: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.icon-settings-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-main);
-}
-
-.title {
+.hero-title {
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text-main);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.ws-status-pill {
+.hero-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Universal Pill Styles */
+.pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.35rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: -0.01em;
+  border: 1px solid var(--border-pill);
+  background: var(--bg-pill);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  user-select: none;
 }
 
-.ws-status-pill.connected {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+.pill-sm {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
 }
 
-.ws-status-pill.disconnected {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
+.pill-tag {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
 }
 
-.settings-box {
-  background: rgba(10, 15, 29, 0.7);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.75rem;
+.pill-status {
+  cursor: default;
+}
+
+.pill-status.online {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pill-status.offline {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.active {
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.status-dot.inactive {
+  background: #52525b;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.icon-pill-btn {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-pill);
+  color: var(--text-secondary);
+  border-radius: 9999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-pill-btn:hover, .icon-pill-btn:active {
+  background: var(--bg-pill-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Preset Chips / AI Slop Pill Carousel */
+.pill-carousel-section {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.field-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+.pill-carousel-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pill-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.73rem;
+  font-family: inherit;
+  border: 1px solid var(--border-pill);
+  background: var(--bg-pill);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-btn:hover {
+  background: var(--bg-pill-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.chip-btn.active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  font-weight: 600;
+}
+
+.chip-btn:active {
+  transform: scale(0.96);
+}
+
+/* Toggle Pill Container */
+.toggle-pill-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  gap: 0.75rem;
+}
+
+.toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.toggle-switch-btn {
+  border-radius: 9999px;
+  border: 1px solid var(--border-pill);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.7rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.toggle-switch-btn.on {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.toggle-switch-btn.off {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+}
+
+/* Forms & Inputs */
+.mono-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 0.85rem 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.input-container:focus-within {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.input-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mono-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  outline: none;
+}
+
+.mono-input::placeholder {
+  color: var(--text-dim);
+}
+
+.mono-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  outline: none;
+  resize: none;
+}
+
+.mono-textarea::placeholder {
+  color: var(--text-dim);
+}
+
+/* Action Button */
+.primary-pill-btn {
+  width: 100%;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.85rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.primary-pill-btn:hover {
+  background: var(--btn-primary-hover);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+}
+
+.primary-pill-btn:active {
+  transform: scale(0.98);
+}
+
+.primary-pill-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Settings Drawer Box */
+.settings-drawer {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .settings-input-row {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .settings-input {
   flex: 1;
   background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  border-radius: 8px;
-  padding: 0.45rem 0.65rem;
-  font-size: 0.82rem;
-  outline: none;
-}
-
-.settings-save-btn {
-  background: var(--accent-green);
-  border: none;
-  color: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
   padding: 0.45rem 0.85rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.toggle-row {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  cursor: pointer;
-}
-
-.toggle-checkbox {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--accent-green);
-  cursor: pointer;
-}
-
-.toggle-text {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #e2e8f0;
-}
-
-.dialer-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.phone-input {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1.5px solid var(--border-color);
-  color: var(--text-main);
-  font-size: 1.35rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 0.8rem 1rem;
-  border-radius: 14px;
-  text-align: center;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.phone-input:focus, .message-textarea:focus, .settings-input:focus {
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 3px var(--accent-green-glow);
-}
-
-.phone-input::placeholder, .message-textarea::placeholder {
-  color: #64748b;
-  opacity: 0.8;
-}
-
-.message-textarea {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1.5px solid var(--border-color);
-  color: var(--text-main);
-  font-size: 0.92rem;
-  line-height: 1.45;
-  padding: 0.8rem 1rem;
-  border-radius: 14px;
-  outline: none;
-  resize: vertical;
-  min-height: 80px;
+  color: var(--text-primary);
   font-family: inherit;
-  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  outline: none;
 }
 
-.call-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
+.settings-input:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.settings-save-pill {
+  background: #ffffff;
+  color: #000000;
   border: none;
-  border-radius: 14px;
-  padding: 0.9rem 1.25rem;
-  font-size: 1.05rem;
+  border-radius: 9999px;
+  padding: 0.45rem 0.85rem;
+  font-family: inherit;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px -4px var(--accent-green-glow);
-  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.call-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-  box-shadow: 0 10px 24px -4px var(--accent-green-glow);
-  transform: translateY(-1px);
-}
-
-.call-btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.call-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.call-btn-inner {
+/* Status Toast */
+.status-pill-toast {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
+  border-radius: 9999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  animation: fade-in 0.2s ease;
 }
 
+.status-pill-toast.success {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.status-pill-toast.error {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: #d4d4d8;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Telemetry Footer */
+.telemetry-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Spin animation for sending */
 .anim-spin {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.status-toast {
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  animation: fadeIn 0.2s ease;
-}
-
-.status-toast.success {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
-}
-
-.status-toast.error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #f87171;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
