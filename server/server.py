@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-RakshaNet Bluetooth Call & Telemetry WebSocket Server
-=====================================================
+RakshaNet Bluetooth Call & Telemetry WebSocket + Dashboard Server
+=================================================================
 1. Monitors Bluetooth handsfree phone calls in PipeWire/Helvum.
    When an active call is detected, extracts the phone number and
    broadcasts it over WebSockets to trigger automatic SMS dispatch.
@@ -9,15 +9,19 @@ RakshaNet Bluetooth Call & Telemetry WebSocket Server
    from the connected gateway phone (08:1C:6E:5F:10:F7). When an incoming
    sensor telemetry SMS alert arrives from the client phone, extracts the
    payload and prints the live readings in the exact requested format.
-3. Accepts direct WebSocket telemetry streams from connected client apps.
+3. Hosts a real-time web dashboard UI on HTTP (default port 8080) displaying
+   live sensor cards, visual compass needle, telephony status, and alert logs.
+4. Accepts direct WebSocket telemetry streams from connected client apps.
 """
 
 import argparse
 import asyncio
+import http.server
 import json
 import os
 import re
 import socket
+import socketserver
 import sys
 import tempfile
 import threading
@@ -62,10 +66,91 @@ def extract_body_from_bmsg(raw_text: str) -> str:
         return '\n'.join(body_lines).strip()
     return raw_text.strip()
 
+class DashboardHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, server_instance=None, **kwargs):
+        self.server_instance = server_instance
+        super().__init__(*args, **kwargs)
+
+    def log_message(self, format, *args):
+        # Suppress routine HTTP request logging to keep console clean
+        pass
+
+    def do_HEAD(self):
+        self.do_GET()
+
+    def do_GET(self):
+        if self.path in ["/", "/index.html"]:
+            dashboard_path = os.path.join(os.path.dirname(__file__), "dashboard.html")
+            if not os.path.exists(dashboard_path):
+                self.send_error(404, "dashboard.html not found")
+                return
+            try:
+                with open(dashboard_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+            except Exception as e:
+                self.send_error(500, f"Error loading dashboard: {e}")
+        elif self.path == "/api/status":
+            status_data = {
+                "server": "RakshaNet Telemetry Server",
+                "local_ip": self.server_instance.local_ip,
+                "ws_port": self.server_instance.port,
+                "http_port": self.server_instance.http_port,
+                "bt_mac": self.server_instance.bt_mac,
+                "clients_count": len(self.server_instance.connected_clients),
+                "last_call_number": self.server_instance.last_detected_number or "9995283835",
+                "timestamp": format_timestamp()
+            }
+            body = json.dumps(status_data).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_error(404, "Not Found")
+
+    def do_POST(self):
+        if self.path == "/api/trigger-call":
+            self.server_instance.on_call_detected("+918714711540", name="Simulated Caller", state="active")
+            body = b'{"success":true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path == "/api/trigger-telemetry":
+            sample_alert = (
+                "Rakshak Alert: Emergency assistance requested\n\n"
+                "Live Sensors (5/5):\n"
+                "• Pedometer: 0 steps (0.00 km)\n"
+                "• Light: 53 lx\n"
+                "• Accelerometer: 9.7 m/s²\n"
+                "• Gyroscope: 0.2 rad/s\n"
+                "• Magnetometer: 186° S"
+            )
+            self.server_instance.display_telemetry(sample_alert, sender="+919495364448", source="Simulated Test")
+            body = b'{"success":true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_error(404, "Not Found")
+
 class TelemetryServer:
-    def __init__(self, host="0.0.0.0", port=8765, bt_mac="08:1C:6E:5F:10:F7"):
+    def __init__(self, host="0.0.0.0", port=8765, http_port=8080, bt_mac="08:1C:6E:5F:10:F7"):
         self.host = host
         self.port = port
+        self.http_port = http_port
         self.bt_mac = bt_mac
         self.local_ip = get_local_ip()
         self.connected_clients = set()
@@ -74,6 +159,7 @@ class TelemetryServer:
         self.last_detected_number = None
         self.last_call_time = 0
         self.last_call_number = None
+        self.latest_telemetry = None
         self.processed_msg_ids = set()
         self.map_session_path = None
 
@@ -113,7 +199,15 @@ class TelemetryServer:
         print(f"\033[1;32m{clean_text}\033[0m", flush=True)
         print("=" * 65 + "\n", flush=True)
 
-        # Broadcast to any active dashboard websockets
+        # Store latest telemetry in memory for newly connected clients
+        self.latest_telemetry = {
+            "content": clean_text,
+            "sender": sender,
+            "source": source,
+            "timestamp": ts
+        }
+
+        # Broadcast to all connected WebSockets (phone apps + web dashboard)
         if self.loop and self.connected_clients:
             payload = {
                 "type": "TELEMETRY_RECEIVED",
@@ -125,7 +219,7 @@ class TelemetryServer:
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
 
     async def broadcast(self, payload):
-        """Send JSON message to all connected phone clients."""
+        """Send JSON message to all connected clients."""
         if not self.connected_clients:
             return
 
@@ -174,9 +268,9 @@ class TelemetryServer:
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
 
     async def handle_client(self, websocket):
-        """Handle incoming WebSocket connection from phone apps."""
+        """Handle incoming WebSocket connection from phone apps & browser dashboard."""
         client_addr = websocket.remote_address
-        print(f"[{format_timestamp()}] 📱 Phone app connected from: {client_addr}")
+        print(f"[{format_timestamp()}] 📱 Client connected from: {client_addr}")
         self.connected_clients.add(websocket)
 
         welcome_payload = {
@@ -184,7 +278,9 @@ class TelemetryServer:
             "server": "RakshaNet Call & Telemetry Server",
             "ip": self.local_ip,
             "port": self.port,
+            "http_port": self.http_port,
             "last_number": self.last_detected_number or "9995283835",
+            "latest_telemetry": self.latest_telemetry,
             "timestamp": format_timestamp()
         }
         await websocket.send(json.dumps(welcome_payload))
@@ -207,17 +303,17 @@ class TelemetryServer:
                     elif "Live Sensors" in str(data):
                         self.display_telemetry(str(data), sender="Client App", source="Direct App WebSocket")
                     else:
-                        print(f"[{format_timestamp()}] 📩 Received from phone: {data}")
+                        print(f"[{format_timestamp()}] 📩 Received from client: {data}")
                 except json.JSONDecodeError:
                     if "Live Sensors" in raw_message or "Rakshak Alert" in raw_message:
                         self.display_telemetry(raw_message, sender="Client App", source="Raw App WebSocket")
                     else:
-                        print(f"[{format_timestamp()}] 📩 Raw text from phone: {raw_message}")
+                        print(f"[{format_timestamp()}] 📩 Raw text from client: {raw_message}")
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
             self.connected_clients.remove(websocket)
-            print(f"[{format_timestamp()}] 🔌 Phone app disconnected: {client_addr}")
+            print(f"[{format_timestamp()}] 🔌 Client disconnected: {client_addr}")
 
     def run_telephony_listener(self):
         """Monitors PipeWire / oFono handsfree calls."""
@@ -296,7 +392,7 @@ class TelemetryServer:
                 mas_interface.SetFolder('msg')
                 print(f"[{format_timestamp()}] 📶 Bluetooth MAP notification listener active for {self.bt_mac}")
                 return True
-            except Exception as e:
+            except Exception:
                 return False
 
         def fetch_full_message(msg_path):
@@ -306,7 +402,6 @@ class TelemetryServer:
                 tmp_fd, tmp_file = tempfile.mkstemp(prefix="map_msg_")
                 os.close(tmp_fd)
                 transfer, _ = msg_obj.Get(tmp_file, False)
-                # Brief wait for OBEX transfer to write file
                 for _ in range(10):
                     time.sleep(0.15)
                     if os.path.exists(tmp_file) and os.path.getsize(tmp_file) > 0:
@@ -320,7 +415,7 @@ class TelemetryServer:
                     except OSError:
                         pass
                 return content
-            except Exception as err:
+            except Exception:
                 return ""
 
         def process_message_candidate(path, props):
@@ -359,7 +454,6 @@ class TelemetryServer:
                 return True
 
             try:
-                # Query newest 5 messages in inbox
                 msgs = mas_interface.ListMessages('inbox', {'MaxListCount': dbus.UInt16(5)})
                 for path, meta in msgs.items():
                     msg_id = str(path)
@@ -367,18 +461,31 @@ class TelemetryServer:
                         self.processed_msg_ids.add(msg_id)
                         process_message_candidate(path, meta)
             except dbus.exceptions.DBusException:
-                # Session might have dropped; reset to re-establish
                 mas_interface = None
             except Exception:
                 pass
             return True
 
-        # Initialize MAP session and set up 3-second resilient poll
         init_session()
         GLib.timeout_add_seconds(3, periodic_inbox_check)
 
         glib_loop = GLib.MainLoop()
         glib_loop.run()
+
+    def run_http_server(self):
+        """Runs the standalone Dashboard HTTP Server in a daemon thread."""
+        server_inst = self
+        class BoundHandler(DashboardHandler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, server_instance=server_inst, **kwargs)
+
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
+        try:
+            httpd = socketserver.ThreadingTCPServer((self.host, self.http_port), BoundHandler)
+            print(f"[{format_timestamp()}] 🖥️ Web Dashboard UI active: \033[1;32mhttp://{self.local_ip}:{self.http_port}\033[0m")
+            httpd.serve_forever()
+        except Exception as e:
+            print(f"[{format_timestamp()}] HTTP server error: {e}")
 
     async def console_trigger_loop(self):
         """Allows testing in terminal: press Enter to test call, or type 't' to test telemetry."""
@@ -424,14 +531,19 @@ class TelemetryServer:
         map_thread = threading.Thread(target=self.run_bluetooth_map_listener, daemon=True)
         map_thread.start()
 
+        # Thread 3: HTTP Web Dashboard UI server
+        http_thread = threading.Thread(target=self.run_http_server, daemon=True)
+        http_thread.start()
+
         print("\n" + "=" * 65)
-        print(" 🚀 RakshaNet Telephony & BLE Telemetry Server")
+        print(" 🚀 RakshaNet Telephony, BLE & Dashboard Server")
         print("=" * 65)
         print(f"  🌐 Local Wi-Fi IP  : \033[1;36m{self.local_ip}\033[0m")
-        print(f"  🔌 Port            : \033[1;36m{self.port}\033[0m")
+        print(f"  🔌 WebSocket Port  : \033[1;36m{self.port}\033[0m  (\033[1;32mws://{self.local_ip}:{self.port}\033[0m)")
+        print(f"  🖥️ Web Dashboard UI: \033[1;36m{self.http_port}\033[0m  (\033[1;32mhttp://{self.local_ip}:{self.http_port}\033[0m)")
         print(f"  📶 Gateway BLE MAC : \033[1;36m{self.bt_mac}\033[0m")
-        print(f"  🔗 WebSocket URL   : \033[1;32mws://{self.local_ip}:{self.port}\033[0m")
         print("=" * 65)
+        print("  💡 Tip: Open the dashboard in browser to view live visual sensors.")
         print("  💡 Tip: Press [Enter] to simulate a call test.")
         print("  💡 Tip: Type 't' + [Enter] to simulate sensor telemetry display.")
         print("=" * 65 + "\n", flush=True)
@@ -442,12 +554,13 @@ class TelemetryServer:
 
 def main():
     parser = argparse.ArgumentParser(description="RakshaNet Bluetooth Call & Telemetry Server")
-    parser.add_argument("--port", "-p", type=int, default=8765, help="Port to listen on (default: 8765)")
+    parser.add_argument("--port", "-p", type=int, default=8765, help="WebSocket port (default: 8765)")
+    parser.add_argument("--http-port", type=int, default=8080, help="Web Dashboard HTTP port (default: 8080)")
     parser.add_argument("--host", default="0.0.0.0", help="Host interface (default: 0.0.0.0)")
     parser.add_argument("--bt-mac", default="08:1C:6E:5F:10:F7", help="Gateway Bluetooth MAC address")
     args = parser.parse_args()
 
-    server = TelemetryServer(host=args.host, port=args.port, bt_mac=args.bt_mac)
+    server = TelemetryServer(host=args.host, port=args.port, http_port=args.http_port, bt_mac=args.bt_mac)
     try:
         asyncio.run(server.start())
     except KeyboardInterrupt:
