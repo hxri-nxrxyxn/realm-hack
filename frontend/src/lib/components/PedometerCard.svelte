@@ -57,7 +57,7 @@
 		</div>
 
 		<!-- Daily Goal Progress -->
-		<div class="space-y-2 rounded-xl bg-secondary/40 p-3 ring-1 ring-border/40">
+		<div class="space-y-2 pt-1">
 			<div class="flex items-center justify-between text-xs">
 				<span class="text-muted-foreground font-medium">Daily Target: {DAILY_GOAL.toLocaleString()} steps</span>
 				<span class="font-bold text-emerald-400 font-mono text-sm">{stepProgress}%</span>
@@ -65,42 +65,42 @@
 			<Progress value={stepProgress} class="h-2.5 bg-secondary/80" />
 		</div>
 
-		<!-- 3 Stat Metrics Grid in Emerald Gradient -->
-		<div class="grid grid-cols-3 gap-2.5 pt-1">
+		<!-- 3 Stat Metrics with Lucide Icons (No Nested Tiles) -->
+		<div class="grid grid-cols-3 gap-2 pt-3 border-t border-border/50 text-center">
 			<!-- Distance -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400 mb-1">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
 					<Navigation class="h-3.5 w-3.5" />
 					<span>Distance</span>
 				</div>
 				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.pedometer.distanceKm.toFixed(2)}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">Kilometers</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">km</div>
 			</div>
 
 			<!-- Calories -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400 mb-1">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
 					<Flame class="h-3.5 w-3.5" />
 					<span>Calories</span>
 				</div>
 				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.pedometer.caloriesBurned.toFixed(0)}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">kcal</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">kcal</div>
 			</div>
 
 			<!-- Detector Cadence -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400 mb-1">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
 					<Zap class="h-3.5 w-3.5" />
 					<span>Detected</span>
 				</div>
 				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.pedometer.detectedSteps}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">Pulses</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">Pulses</div>
 			</div>
 		</div>
 	</Card.Content>

@@ -2,7 +2,7 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { Activity } from "lucide-svelte";
+	import { Activity, Sliders, Zap } from "lucide-svelte";
 
 	let isHighG = $derived(sensorManager.accelerometer.magnitude > 15);
 	let gForce = $derived((sensorManager.accelerometer.magnitude / 9.80665).toFixed(2));
@@ -55,13 +55,13 @@
 			</div>
 		</div>
 
-		<!-- 3-Axis Balance Meters in Unified Emerald Gradient -->
-		<div class="space-y-3 rounded-xl bg-secondary/40 p-3.5 ring-1 ring-border/40">
+		<!-- 3-Axis Balance Meters with Lucide Icons (No Nested Tiles) -->
+		<div class="space-y-3 pt-3 border-t border-border/50">
 			<!-- X Axis -->
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
 					<div class="flex items-center gap-1.5 font-semibold text-emerald-400">
-						<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+						<Activity class="h-3.5 w-3.5 text-emerald-400" />
 						<span>X Axis</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -69,7 +69,7 @@
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>
 				</div>
-				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
+				<div class="relative h-2 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
 						class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-75 rounded-full"
@@ -82,7 +82,7 @@
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
 					<div class="flex items-center gap-1.5 font-semibold text-emerald-400">
-						<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+						<Sliders class="h-3.5 w-3.5 text-emerald-400" />
 						<span>Y Axis</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -90,7 +90,7 @@
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>
 				</div>
-				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
+				<div class="relative h-2 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
 						class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-75 rounded-full"
@@ -103,7 +103,7 @@
 			<div class="space-y-1.5">
 				<div class="flex justify-between items-center text-xs">
 					<div class="flex items-center gap-1.5 font-semibold text-emerald-400">
-						<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+						<Zap class="h-3.5 w-3.5 text-emerald-400" />
 						<span>Z Axis</span>
 					</div>
 					<span class="font-mono font-bold text-foreground text-sm">
@@ -111,7 +111,7 @@
 						<span class="text-[10px] text-muted-foreground font-normal">m/s²</span>
 					</span>
 				</div>
-				<div class="relative h-2.5 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
+				<div class="relative h-2 w-full bg-secondary/80 rounded-full overflow-hidden flex items-center">
 					<div class="absolute left-1/2 h-full w-0.5 bg-border z-10"></div>
 					<div
 						class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-75 rounded-full"

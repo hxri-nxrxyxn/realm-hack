@@ -2,7 +2,7 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { Magnet } from "lucide-svelte";
+	import { Magnet, Compass, Navigation, Activity } from "lucide-svelte";
 
 	let isAnomaly = $derived(
 		sensorManager.magnetometer.fieldStrength > 90 || sensorManager.magnetometer.fieldStrength < 15
@@ -75,7 +75,7 @@
 		</div>
 
 		<!-- Trend Sparkline -->
-		<div class="flex items-center justify-between rounded-xl bg-secondary/40 p-3 ring-1 ring-border/40">
+		<div class="flex items-center justify-between pt-1">
 			<span class="text-xs text-muted-foreground font-medium">Flux Stability</span>
 			<Sparkline
 				data={sensorManager.magHistory}
@@ -86,27 +86,36 @@
 			/>
 		</div>
 
-		<!-- 3-Axis Field Components -->
-		<div class="grid grid-cols-3 gap-2.5 pt-1">
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center">
-				<div class="text-[10px] text-muted-foreground font-semibold uppercase">X (North)</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground mt-0.5">
+		<!-- 3-Axis Field Components with Lucide Icons (No Nested Tiles) -->
+		<div class="grid grid-cols-3 gap-2 pt-3 border-t border-border/50 text-center">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Compass class="h-3.5 w-3.5" />
+					<span>X (North)</span>
+				</div>
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.magnetometer.x.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center">
-				<div class="text-[10px] text-muted-foreground font-semibold uppercase">Y (East)</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground mt-0.5">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Navigation class="h-3.5 w-3.5" />
+					<span>Y (East)</span>
+				</div>
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.magnetometer.y.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center">
-				<div class="text-[10px] text-muted-foreground font-semibold uppercase">Z (Vertical)</div>
-				<div class="text-base sm:text-lg font-bold font-mono text-foreground mt-0.5">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Activity class="h-3.5 w-3.5" />
+					<span>Z (Down)</span>
+				</div>
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.magnetometer.z.toFixed(1)}
 				</div>
 				<div class="text-[10px] text-muted-foreground font-medium">µT</div>

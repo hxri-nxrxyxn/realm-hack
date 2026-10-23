@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
-	import { Button } from "#lib/components/ui/button/index.js";
 	import * as Alert from "#lib/components/ui/alert/index.js";
 	import * as Card from "#lib/components/ui/card/index.js";
 
@@ -65,8 +64,8 @@
 		</div>
 	</header>
 
-	<!-- Main Body Content -->
-	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5">
+	<!-- Main Body Content (Scrollable) -->
+	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5 pb-28 sm:pb-32">
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
 			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">
@@ -124,40 +123,40 @@
 					</div>
 				</div>
 
-				<!-- 4x1 Matrix (4 Columns x 1 Row) in Unified Emerald Gradient -->
-				<div class="grid grid-cols-4 gap-2 sm:gap-3 pt-2 border-t border-border/50">
+				<!-- 4x1 Matrix (4 Columns x 1 Row) with Lucide Icons (No Nested Tiles) -->
+				<div class="grid grid-cols-4 gap-2 pt-3 border-t border-border/50 text-center">
 					<!-- Cell 1: Accelerometer -->
-					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
+					<div class="flex flex-col items-center">
 						<Activity class="h-4 w-4 text-emerald-400 mb-1" />
-						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Accel</div>
-						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[11px] font-bold text-foreground truncate w-full">Accel</div>
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
 							{sensorManager.accelerometer.magnitude.toFixed(1)} m/s²
 						</div>
 					</div>
 
 					<!-- Cell 2: Gyroscope -->
-					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
+					<div class="flex flex-col items-center">
 						<Compass class="h-4 w-4 text-emerald-400 mb-1" />
-						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Gyro</div>
-						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[11px] font-bold text-foreground truncate w-full">Gyro</div>
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
 							{sensorManager.gyroscope.rate.toFixed(1)} rad/s
 						</div>
 					</div>
 
 					<!-- Cell 3: Compass -->
-					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
+					<div class="flex flex-col items-center">
 						<Zap class="h-4 w-4 text-emerald-400 mb-1" />
-						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Compass</div>
-						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[11px] font-bold text-foreground truncate w-full">Compass</div>
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
 							{Math.round(sensorManager.magnetometer.heading)}° {sensorManager.magnetometer.cardinal}
 						</div>
 					</div>
 
 					<!-- Cell 4: Photometer & Steps -->
-					<div class="flex flex-col items-center justify-center rounded-xl bg-secondary/60 p-2.5 ring-1 ring-border/50 text-center transition-colors group-hover:bg-secondary/80">
+					<div class="flex flex-col items-center">
 						<SunMedium class="h-4 w-4 text-emerald-400 mb-1" />
-						<div class="text-[10px] sm:text-xs font-bold text-foreground truncate w-full">Light & Steps</div>
-						<div class="text-[10px] text-emerald-300 font-mono font-semibold mt-0.5 truncate w-full">
+						<div class="text-[11px] font-bold text-foreground truncate w-full">Light</div>
+						<div class="text-[10px] sm:text-[11px] text-emerald-300 font-mono font-semibold truncate w-full">
 							{Math.round(sensorManager.ambientLight.lux)} lx
 						</div>
 					</div>
@@ -167,28 +166,34 @@
 
 		<!-- Direct SMS Alert Box -->
 		<SmsSenderCard />
+	</main>
 
-		<!-- Single Start / Stop Button -->
-		<div class="pt-2 pb-6">
+	<!-- Stagnant Fixed Bottom Bar with Emerald Gradient and Grid Pattern -->
+	<div class="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-safe bg-background/90 backdrop-blur-2xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
+		<div class="mx-auto max-w-5xl">
 			{#if sensorManager.isListening}
-				<Button
-					variant="destructive"
-					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 transition-transform active:scale-[0.98] ring-4 ring-emerald-900/30 bg-emerald-950 border border-emerald-700/60 text-emerald-200 hover:bg-emerald-900 cursor-pointer"
+				<button
+					type="button"
+					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 hover:from-emerald-900 hover:to-emerald-900 text-emerald-100 border-2 border-emerald-500/50 ring-1 ring-emerald-500/30 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.stop()}
 				>
-					<Square class="h-6 w-6 fill-current" />
-					<span>Stop Sensors</span>
-				</Button>
+					<!-- Technical Grid Pattern Overlay -->
+					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#10b98125_1px,transparent_1px),linear-gradient(to_bottom,#10b98125_1px,transparent_1px)] bg-[size:14px_14px]"></div>
+					<Square class="h-6 w-6 fill-current relative z-10" />
+					<span class="tracking-wide relative z-10">Stop Sensors</span>
+				</button>
 			{:else}
-				<Button
-					variant="default"
-					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 bg-emerald-600 hover:bg-emerald-500 text-white transition-transform active:scale-[0.98] ring-4 ring-emerald-500/30 cursor-pointer"
+				<button
+					type="button"
+					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.start()}
 				>
-					<Play class="h-6 w-6 fill-current" />
-					<span>Start Sensors</span>
-				</Button>
+					<!-- Technical Grid Pattern Overlay -->
+					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff25_1px,transparent_1px),linear-gradient(to_bottom,#ffffff25_1px,transparent_1px)] bg-[size:14px_14px]"></div>
+					<Play class="h-6 w-6 fill-current relative z-10" />
+					<span class="tracking-wide relative z-10">Start Sensors</span>
+				</button>
 			{/if}
 		</div>
-	</main>
+	</div>
 </div>

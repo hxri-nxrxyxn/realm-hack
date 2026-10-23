@@ -3,7 +3,7 @@
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { SunMedium } from "lucide-svelte";
+	import { SunMedium, Moon, Building2, Sun } from "lucide-svelte";
 
 	let luxProgress = $derived(
 		Math.min(100, Math.round((Math.log10(Math.max(1, sensorManager.ambientLight.lux)) / 4) * 100))
@@ -58,7 +58,7 @@
 		</div>
 
 		<!-- Light Intensity Meter -->
-		<div class="space-y-2 rounded-xl bg-secondary/40 p-3 ring-1 ring-border/40">
+		<div class="space-y-2 pt-1">
 			<div class="flex justify-between items-center text-xs">
 				<span class="text-muted-foreground font-medium">Brightness Spectrum</span>
 				<span class="font-bold text-emerald-400 font-mono text-sm">{luxProgress}%</span>
@@ -66,28 +66,37 @@
 			<Progress value={luxProgress} class="h-2.5 bg-secondary/80" />
 		</div>
 
-		<!-- 3 Zone Indicators in Emerald Gradient -->
-		<div class="grid grid-cols-3 gap-2.5 pt-1 text-center">
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux < 50 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
-				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Dark / Night</div>
-				<div class="text-sm font-bold font-mono text-foreground mt-0.5">&lt;50 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux < 50 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+		<!-- 3 Zone Indicators with Lucide Icons (No Nested Tiles) -->
+		<div class="grid grid-cols-3 gap-2 pt-3 border-t border-border/50 text-center">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Moon class="h-3.5 w-3.5" />
+					<span>Night</span>
+				</div>
+				<div class="text-sm font-bold font-mono text-foreground">&lt;50 lx</div>
+				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux < 50 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux < 50 ? "Active" : "Inactive"}
 				</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
-				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Indoor Office</div>
-				<div class="text-sm font-bold font-mono text-foreground mt-0.5">50-1000 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Building2 class="h-3.5 w-3.5" />
+					<span>Indoor</span>
+				</div>
+				<div class="text-sm font-bold font-mono text-foreground">50-1000 lx</div>
+				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux >= 50 && sensorManager.ambientLight.lux <= 1000 ? "Active" : "Inactive"}
 				</div>
 			</div>
 
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-2.5 ring-1 {sensorManager.ambientLight.lux > 1000 ? 'ring-emerald-500/60 bg-emerald-500/10' : 'ring-border/50'}">
-				<div class="text-[10px] text-muted-foreground uppercase font-semibold">Sunlight</div>
-				<div class="text-sm font-bold font-mono text-foreground mt-0.5">&gt;1000 lx</div>
-				<div class="text-[10px] {sensorManager.ambientLight.lux > 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Sun class="h-3.5 w-3.5" />
+					<span>Sunlight</span>
+				</div>
+				<div class="text-sm font-bold font-mono text-foreground">&gt;1000 lx</div>
+				<div class="text-[10px] font-medium {sensorManager.ambientLight.lux > 1000 ? 'text-emerald-400 font-bold' : 'text-muted-foreground'} mt-0.5">
 					{sensorManager.ambientLight.lux > 1000 ? "Active" : "Inactive"}
 				</div>
 			</div>

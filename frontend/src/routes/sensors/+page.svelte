@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
-	import { Button } from "#lib/components/ui/button/index.js";
 	import * as Alert from "#lib/components/ui/alert/index.js";
 
 	import PedometerCard from "#lib/components/PedometerCard.svelte";
@@ -16,7 +15,10 @@
 		Square,
 		ShieldCheck,
 		Sliders,
-		ArrowLeft
+		ArrowLeft,
+		Cpu,
+		Footprints,
+		Gauge
 	} from "lucide-svelte";
 
 	onMount(async () => {
@@ -65,8 +67,8 @@
 		</div>
 	</header>
 
-	<!-- Main Body Content: All Sensors Grid Directly Below Menu Bar -->
-	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5">
+	<!-- Main Body Content: All Sensors Grid (Scrollable) -->
+	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5 pb-28 sm:pb-32">
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
 			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">
@@ -105,12 +107,12 @@
 				<AmbientLightCard />
 			</div>
 
-			<!-- Hardware Diagnostic Card -->
+			<!-- Hardware Diagnostic Card with Lucide Icons (No Nested Tiles) -->
 			<div class="col-span-1 flex flex-col justify-between rounded-2xl border border-border/70 bg-card/90 p-4 sm:p-5 shadow-md backdrop-blur-xl">
 				<div>
 					<div class="flex items-center justify-between pb-2">
 						<div class="flex items-center gap-2">
-							<Sliders class="h-4 w-4 text-primary" />
+							<Sliders class="h-4 w-4 text-emerald-400" />
 							<span class="text-xs font-bold uppercase tracking-wider text-foreground">Hardware Status</span>
 						</div>
 						<span class="text-xs font-mono font-semibold text-emerald-400">Capacitor 7</span>
@@ -119,17 +121,26 @@
 						Package: <span class="font-mono text-foreground font-semibold">net.rakshak.sensors</span>
 					</p>
 
-					<div class="mt-3.5 space-y-2 text-xs">
-						<div class="flex justify-between items-center rounded-lg bg-secondary/50 px-2.5 py-1.5">
-							<span class="text-muted-foreground">Platform Engine:</span>
+					<div class="mt-4 space-y-2.5 text-xs">
+						<div class="flex justify-between items-center py-1 border-b border-border/40">
+							<span class="text-muted-foreground flex items-center gap-1.5">
+								<Cpu class="h-3.5 w-3.5 text-emerald-400" />
+								<span>Platform Engine:</span>
+							</span>
 							<span class="font-mono font-bold text-foreground">{sensorManager.isNative ? "Android Native" : "Web Preview"}</span>
 						</div>
-						<div class="flex justify-between items-center rounded-lg bg-secondary/50 px-2.5 py-1.5">
-							<span class="text-muted-foreground">Step Detector:</span>
+						<div class="flex justify-between items-center py-1 border-b border-border/40">
+							<span class="text-muted-foreground flex items-center gap-1.5">
+								<Footprints class="h-3.5 w-3.5 text-emerald-400" />
+								<span>Step Detector:</span>
+							</span>
 							<span class="font-mono font-bold text-emerald-400">{sensorManager.status.pedometerHardwareAvailable ? "Hardware" : "Software"}</span>
 						</div>
-						<div class="flex justify-between items-center rounded-lg bg-secondary/50 px-2.5 py-1.5">
-							<span class="text-muted-foreground">Update Rate:</span>
+						<div class="flex justify-between items-center py-1">
+							<span class="text-muted-foreground flex items-center gap-1.5">
+								<Gauge class="h-3.5 w-3.5 text-emerald-400" />
+								<span>Update Rate:</span>
+							</span>
 							<span class="font-mono font-bold text-emerald-400">{sensorManager.updateRateHz} updates/sec</span>
 						</div>
 					</div>
@@ -143,28 +154,34 @@
 
 		<!-- Direct SMS Alert Box -->
 		<SmsSenderCard />
+	</main>
 
-		<!-- Single Start / Stop Button -->
-		<div class="pt-2 pb-6">
+	<!-- Stagnant Fixed Bottom Bar with Emerald Gradient and Grid Pattern -->
+	<div class="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-safe bg-background/90 backdrop-blur-2xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
+		<div class="mx-auto max-w-5xl">
 			{#if sensorManager.isListening}
-				<Button
-					variant="destructive"
-					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 transition-transform active:scale-[0.98] ring-4 ring-emerald-900/30 bg-emerald-950 border border-emerald-700/60 text-emerald-200 hover:bg-emerald-900 cursor-pointer"
+				<button
+					type="button"
+					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 hover:from-emerald-900 hover:to-emerald-900 text-emerald-100 border-2 border-emerald-500/50 ring-1 ring-emerald-500/30 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.stop()}
 				>
-					<Square class="h-6 w-6 fill-current" />
-					<span>Stop Sensors</span>
-				</Button>
+					<!-- Technical Grid Pattern Overlay -->
+					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#10b98125_1px,transparent_1px),linear-gradient(to_bottom,#10b98125_1px,transparent_1px)] bg-[size:14px_14px]"></div>
+					<Square class="h-6 w-6 fill-current relative z-10" />
+					<span class="tracking-wide relative z-10">Stop Sensors</span>
+				</button>
 			{:else}
-				<Button
-					variant="default"
-					class="w-full h-16 sm:h-18 text-lg sm:text-xl font-black rounded-2xl shadow-xl gap-3 bg-emerald-600 hover:bg-emerald-500 text-white transition-transform active:scale-[0.98] ring-4 ring-emerald-500/30 cursor-pointer"
+				<button
+					type="button"
+					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.start()}
 				>
-					<Play class="h-6 w-6 fill-current" />
-					<span>Start Sensors</span>
-				</Button>
+					<!-- Technical Grid Pattern Overlay -->
+					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff25_1px,transparent_1px),linear-gradient(to_bottom,#ffffff25_1px,transparent_1px)] bg-[size:14px_14px]"></div>
+					<Play class="h-6 w-6 fill-current relative z-10" />
+					<span class="tracking-wide relative z-10">Start Sensors</span>
+				</button>
 			{/if}
 		</div>
-	</main>
+	</div>
 </div>

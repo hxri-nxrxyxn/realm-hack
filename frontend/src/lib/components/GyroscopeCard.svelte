@@ -2,7 +2,7 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import Sparkline from "./Sparkline.svelte";
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
-	import { Compass } from "lucide-svelte";
+	import { Compass, RotateCw, RotateCcw } from "lucide-svelte";
 
 	let isSpinning = $derived(sensorManager.gyroscope.rate > 0.8);
 	let degPerSec = $derived(Math.round(sensorManager.gyroscope.rate * (180 / Math.PI)));
@@ -56,39 +56,42 @@
 			</div>
 		</div>
 
-		<!-- 3-Axis Rotation Cards in Emerald Gradient -->
-		<div class="grid grid-cols-3 gap-2.5 pt-1">
+		<!-- 3-Axis Rotation with Lucide Icons (No Nested Tiles) -->
+		<div class="grid grid-cols-3 gap-2 pt-3 border-t border-border/50 text-center">
 			<!-- Pitch X -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
-					Pitch (X)
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<RotateCw class="h-3.5 w-3.5" />
+					<span>Pitch (X)</span>
 				</div>
-				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.gyroscope.x > 0 ? "+" : ""}{sensorManager.gyroscope.x.toFixed(2)}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">rad/s</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>
 			</div>
 
 			<!-- Roll Y -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
-					Roll (Y)
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<RotateCcw class="h-3.5 w-3.5" />
+					<span>Roll (Y)</span>
 				</div>
-				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.gyroscope.y > 0 ? "+" : ""}{sensorManager.gyroscope.y.toFixed(2)}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">rad/s</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>
 			</div>
 
 			<!-- Yaw Z -->
-			<div class="flex flex-col rounded-xl bg-secondary/60 p-3 ring-1 ring-border/50 text-center">
-				<div class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">
-					Yaw (Z)
+			<div class="flex flex-col items-center">
+				<div class="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 mb-0.5">
+					<Compass class="h-3.5 w-3.5" />
+					<span>Yaw (Z)</span>
 				</div>
-				<div class="text-lg sm:text-xl font-bold font-mono text-foreground">
+				<div class="text-base sm:text-lg font-bold font-mono text-foreground">
 					{sensorManager.gyroscope.z > 0 ? "+" : ""}{sensorManager.gyroscope.z.toFixed(2)}
 				</div>
-				<div class="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">rad/s</div>
+				<div class="text-[10px] text-muted-foreground uppercase font-medium">rad/s</div>
 			</div>
 		</div>
 	</Card.Content>
