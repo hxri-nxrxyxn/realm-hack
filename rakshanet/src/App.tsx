@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Phone, PhoneCall, Delete, Shield, Smartphone } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+interface DirectCallPlugin {
+  makeCall(options: { number: string }): Promise<void>;
+}
+
+const DirectCall = registerPlugin<DirectCallPlugin>('DirectCall');
 
 export default function App() {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const defaultPlaceholder = '9995283835';
 
-  const handleCall = (e?: React.FormEvent) => {
+  const handleCall = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     // Use entered number, or fallback to placeholder default
@@ -20,20 +26,29 @@ export default function App() {
       return;
     }
 
-    setStatusMessage(`Opening dialer for ${rawNumber}...`);
+    setStatusMessage(`Calling ${rawNumber}...`);
 
-    // In Capacitor and mobile web, window.location.href with 'tel:' opens native dialer
-    try {
-      window.location.href = `tel:${sanitized}`;
-    } catch (err) {
-      console.error('Call launch error:', err);
-      // Fallback
-      window.open(`tel:${sanitized}`, '_system');
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await DirectCall.makeCall({ number: sanitized });
+        setStatusMessage(`Direct call initiated to ${rawNumber}`);
+      } catch (err: unknown) {
+        console.error('Direct call error:', err);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setStatusMessage(errorMsg || 'Permission denied or call failed');
+      }
+    } else {
+      // On web browser fallback to tel: protocol
+      try {
+        window.location.href = `tel:${sanitized}`;
+      } catch (err) {
+        console.error('Call launch error:', err);
+        window.open(`tel:${sanitized}`, '_system');
+      }
+      setTimeout(() => {
+        setStatusMessage(`Call initiated: ${rawNumber}`);
+      }, 1000);
     }
-
-    setTimeout(() => {
-      setStatusMessage(`Call initiated: ${rawNumber}`);
-    }, 1200);
   };
 
   const handleKeyPress = (val: string) => {
