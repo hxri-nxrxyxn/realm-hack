@@ -3,723 +3,570 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RakshaNet • Emergency Telemetry Server Dashboard</title>
+  <title>rakshanet / server</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
     :root {
-      --bg-dark: #090d16;
-      --bg-card: #111827;
-      --bg-card-hover: #172236;
-      --border: #1f293d;
-      --border-focus: #3b82f6;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-green: #10b981;
-      --accent-green-glow: rgba(16, 185, 129, 0.2);
-      --accent-red: #ef4444;
-      --accent-red-glow: rgba(239, 68, 68, 0.25);
-      --accent-cyan: #06b6d4;
-      --accent-amber: #f59e0b;
-      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --bg-page: #000000;
+      --bg-panel: #0a0a0a;
+      --bg-box: #050505;
+      --bg-input: #000000;
+
+      --border-dim: #1f1f1f;
+      --border-mid: #333333;
+      --border-strong: #666666;
+      --border-active: #ffffff;
+
+      --text-bright: #ffffff;
+      --text-mid: #999999;
+      --text-dim: #555555;
+
+      --btn-bg: #ffffff;
+      --btn-text: #000000;
+      --btn-hover: #e0e0e0;
+
+      font-family: 'IBM Plex Mono', monospace;
+      color-scheme: dark;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      border-radius: 0 !important;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: 0 !important;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-page);
+      color: var(--text-bright);
+      font-family: 'IBM Plex Mono', monospace;
+      text-transform: lowercase;
+      line-height: 1.45;
     }
 
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-sans);
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      line-height: 1.5;
+      min-height: 100vh;
+      padding: 1rem;
     }
 
-    /* Top Nav */
-    header {
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      padding: 0.85rem 1.5rem;
-    }
-
-    .header-inner {
-      max-width: 1400px;
+    /* Container */
+    .dashboard-container {
+      width: 100%;
+      max-width: 1200px;
       margin: 0 auto;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    /* Header */
+    .header-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-mid);
+      padding: 1rem 1.25rem;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       flex-wrap: wrap;
       gap: 1rem;
     }
 
-    .brand {
+    .brand-section {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       gap: 0.75rem;
-    }
-
-    .brand-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px var(--accent-green-glow);
     }
 
     .brand-title {
       font-size: 1.15rem;
-      font-weight: 800;
-      letter-spacing: -0.025em;
-      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-bright);
     }
 
     .brand-sub {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-
-    .header-stats {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
       font-size: 0.75rem;
-      font-weight: 600;
-      font-family: var(--font-mono);
-      background: #1e293b;
-      border: 1px solid var(--border);
+      color: var(--text-dim);
     }
 
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #64748b;
-    }
-
-    .badge.online .badge-dot {
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulse 2s infinite;
-    }
-
-    .badge.alert .badge-dot {
-      background: var(--accent-red);
-      box-shadow: 0 0 8px var(--accent-red);
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.9); }
-    }
-
-    /* Main Container */
-    main {
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      flex: 1;
-    }
-
-    /* Priority Emergency Card */
-    .emergency-panel {
-      background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(17, 24, 39, 0.95) 100%);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      border-radius: 1rem;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px var(--accent-red-glow);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .emergency-panel.standby {
-      background: var(--bg-card);
-      border-color: var(--border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .emergency-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .emergency-title-group {
+    .header-controls {
       display: flex;
       align-items: center;
       gap: 0.6rem;
+      flex-wrap: wrap;
     }
 
-    .emergency-title {
-      font-size: 1.15rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #f87171;
+    .status-tag {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border-dim);
+      background: var(--bg-page);
+      color: var(--text-dim);
     }
 
-    .emergency-panel.standby .emergency-title {
-      color: var(--text-main);
+    .status-tag.active {
+      border-color: var(--border-mid);
+      color: var(--text-bright);
     }
 
-    .telemetry-raw-box {
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 0.75rem;
-      padding: 1rem 1.25rem;
-      font-family: var(--font-mono);
-      font-size: 0.92rem;
-      line-height: 1.6;
-      color: #fecaca;
-      white-space: pre-wrap;
-      word-break: break-word;
-      position: relative;
+    .status-tag.warn {
+      border-color: var(--border-strong);
+      color: #aaaaaa;
     }
 
-    .emergency-panel.standby .telemetry-raw-box {
-      border-color: var(--border);
-      color: var(--text-muted);
-    }
-
-    /* 5-Axis Sensor Grid */
-    .grid-sensors {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .sensor-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .sensor-card:hover {
-      background: var(--bg-card-hover);
-      border-color: rgba(16, 185, 129, 0.4);
-      transform: translateY(-2px);
-    }
-
-    .sensor-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-    }
-
-    .sensor-icon-wrap {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--accent-green);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .sensor-name {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.05em;
-    }
-
-    .sensor-val {
-      font-size: 1.85rem;
-      font-weight: 800;
-      font-family: var(--font-mono);
-      color: var(--text-main);
-      display: flex;
-      align-items: baseline;
-      gap: 0.3rem;
-      margin: 0.35rem 0;
-    }
-
-    .sensor-unit {
-      font-size: 0.85rem;
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--border-mid);
+      color: var(--text-mid);
+      font-family: inherit;
+      font-size: 0.72rem;
       font-weight: 500;
-      color: var(--accent-green);
+      padding: 0.25rem 0.55rem;
+      cursor: pointer;
+      transition: all 0.1s ease;
     }
 
-    .sensor-sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      margin-top: 0.25rem;
+    .action-btn:hover {
+      border-color: var(--border-active);
+      color: var(--text-bright);
+      background: rgba(255, 255, 255, 0.05);
     }
 
-    /* Compass Graphic */
-    .compass-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 0.5rem;
+    .action-btn.solid {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border-color: var(--btn-bg);
+      font-weight: 600;
     }
 
-    .compass-dial {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 2px dashed rgba(255, 255, 255, 0.15);
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.3);
+    .action-btn.solid:hover {
+      background: var(--btn-hover);
     }
 
-    .compass-needle {
-      width: 4px;
-      height: 60px;
-      position: absolute;
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .compass-needle::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50%;
-      background: #ef4444;
-      border-radius: 2px 2px 0 0;
-    }
-
-    .compass-needle::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 50%;
-      background: #10b981;
-      border-radius: 0 0 2px 2px;
-    }
-
-    .compass-center {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #fff;
-      z-index: 2;
-    }
-
-    /* Control Panel & Call System */
-    .bottom-row {
+    /* Layout Grids */
+    .grid-2col {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.25rem;
     }
 
-    @media (max-width: 900px) {
-      .bottom-row {
+    @media (max-width: 860px) {
+      .grid-2col {
         grid-template-columns: 1fr;
       }
     }
 
-    .panel-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
+    /* System Panels */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-mid);
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
 
-    .panel-box h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
+    .panel.alert-active {
+      border-color: var(--border-active);
+    }
+
+    .panel-label-row {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 0.65rem;
     }
 
-    .feed-list {
+    .panel-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-mid);
+    }
+
+    .panel-meta {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    /* Emergency Alert Raw Box */
+    .alert-terminal-box {
+      background: var(--bg-box);
+      border: 1px solid var(--border-dim);
+      padding: 1rem;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--text-bright);
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 160px;
+    }
+
+    /* Telemetry 5-Matrix Grid */
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .sensor-tile {
+      background: var(--bg-box);
+      border: 1px solid var(--border-dim);
+      padding: 0.9rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      max-height: 250px;
-      overflow-y: auto;
-      padding-right: 0.25rem;
+      gap: 0.4rem;
+      transition: border-color 0.1s ease;
     }
 
-    .feed-item {
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 0.5rem;
-      padding: 0.6rem 0.85rem;
-      font-size: 0.8rem;
+    .sensor-tile:hover {
+      border-color: var(--border-mid);
+    }
+
+    .tile-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: lowercase;
+    }
+
+    .tile-val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .tile-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-bright);
+    }
+
+    .tile-unit {
+      font-size: 0.75rem;
+      color: var(--text-mid);
+      font-weight: 500;
+    }
+
+    .tile-sub {
+      font-size: 0.7rem;
+      color: var(--text-mid);
+    }
+
+    /* Minimalist Technical Compass */
+    .compass-display {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .compass-ring {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border-mid);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+    }
+
+    .compass-pointer {
+      width: 2px;
+      height: 32px;
+      background: linear-gradient(to top, var(--text-dim) 50%, #ffffff 50%);
+      transform-origin: center center;
+      transition: transform 0.2s cubic-bezier(0.1, 1, 0.1, 1);
+    }
+
+    /* Telephony Section */
+    .key-value-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .kv-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.5rem;
+      background: var(--bg-box);
+      border: 1px solid var(--border-dim);
+    }
+
+    .kv-key {
+      color: var(--text-dim);
+    }
+
+    .kv-val {
+      color: var(--text-bright);
+      font-weight: 500;
+    }
+
+    /* Activity Stream List */
+    .stream-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .stream-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.4rem 0.6rem;
+      background: var(--bg-box);
+      border: 1px solid var(--border-dim);
     }
 
-    .feed-item.alert {
-      border-color: rgba(239, 68, 68, 0.3);
-      background: rgba(239, 68, 68, 0.05);
+    .stream-item.alert-item {
+      border-color: var(--border-strong);
+      color: #ffffff;
     }
 
-    /* Buttons & Interactive Controls */
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      background: #1e293b;
-      color: var(--text-main);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: all 0.15s ease;
-      font-family: var(--font-sans);
-    }
-
-    .btn:hover {
-      background: #334155;
-      border-color: #475569;
-    }
-
-    .btn-primary {
-      background: var(--accent-green);
-      color: #000;
-      border-color: var(--accent-green);
-    }
-
-    .btn-primary:hover {
-      background: #059669;
-      border-color: #059669;
-    }
-
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
-      border-color: rgba(239, 68, 68, 0.4);
-    }
-
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.3);
-      color: #fee2e2;
+    .stream-time {
+      color: var(--text-dim);
+      font-size: 0.68rem;
     }
 
     /* Footer */
     footer {
-      border-top: 1px solid var(--border);
-      padding: 1rem 1.5rem;
-      font-size: 0.75rem;
-      color: var(--text-muted);
+      max-width: 1200px;
+      margin: 0.5rem auto 0;
+      width: 100%;
       text-align: center;
-      background: rgba(17, 24, 39, 0.5);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border-dim);
+      padding-top: 0.75rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Header Navigation -->
-  <header>
-    <div class="header-inner">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #000;">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-title">RakshaNet Server</div>
-          <div class="brand-sub">Autonomous Bluetooth Call & Live Telemetry Hub</div>
-        </div>
-      </div>
+<div class="dashboard-container">
+  <!-- Top Header Panel -->
+  <header class="header-panel">
+    <div class="brand-section">
+      <span class="brand-title">rakshanet / server</span>
+      <span class="brand-sub">emergency telemetry hub</span>
+    </div>
 
-      <div class="header-stats">
-        <div class="badge online" id="ws-badge">
-          <div class="badge-dot"></div>
-          <span id="ws-status-text">WS: Connecting...</span>
-        </div>
-        <div class="badge online" id="bt-badge">
-          <div class="badge-dot"></div>
-          <span>BLE Gateway: 08:1C:6E:5F:10:F7</span>
-        </div>
-        <div class="badge offline" id="gateway-app-badge">
-          <div class="badge-dot"></div>
-          <span id="gateway-app-text">Gateway App: Offline</span>
-        </div>
-        <button class="btn btn-primary" id="btn-sound-toggle" onclick="toggleAudioAlarm()">
-          🔊 Sound: ON
-        </button>
-      </div>
+    <div class="header-controls">
+      <span class="status-tag active" id="ws-tag">ws: [127.0.0.1:8765]</span>
+      <span class="status-tag active" id="ble-tag">ble: [08:1c:6e:5f:10:f7]</span>
+      <span class="status-tag warn" id="gateway-tag">gateway: [checking...]</span>
+      <button type="button" class="action-btn" id="sound-btn" onclick="toggleAudioAlarm()">
+        [sound: on]
+      </button>
     </div>
   </header>
 
-  <!-- Main Dashboard Content -->
-  <main>
-    <!-- Priority Emergency Sensor Banner -->
-    <section class="emergency-panel standby" id="emergency-panel">
-      <div class="emergency-header">
-        <div class="emergency-title-group">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;">
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <span class="emergency-title" id="emergency-title">Rakshak Alert: Emergency assistance requested</span>
-        </div>
-        <div class="btn-group">
-          <span class="badge" id="source-badge">Source: Standby</span>
-          <span class="badge" id="time-badge">Waiting for telemetry...</span>
-          <button class="btn" onclick="copyAlertText()">Copy Text</button>
-        </div>
+  <!-- Emergency Alert Priority Section -->
+  <section class="panel" id="alert-panel">
+    <div class="panel-label-row">
+      <span class="panel-label">// emergency alert payload</span>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span class="panel-meta" id="alert-source-meta">source: [waiting for incoming alert]</span>
+        <span class="panel-meta" id="alert-time-meta"></span>
+        <button type="button" class="action-btn" onclick="copyAlertText()">[copy payload]</button>
       </div>
+    </div>
 
-      <!-- Exact Text Box specified by User -->
-      <div class="telemetry-raw-box" id="raw-telemetry-box">Rakshak Alert: Emergency assistance requested
+    <div class="alert-terminal-box" id="raw-telemetry-box">rakshak alert: standby mode
 
-Live Sensors (5/5):
-• Pedometer: 0 steps (0.00 km)
-• Light: 53 lx
-• Accelerometer: 9.7 m/s²
-• Gyroscope: 0.2 rad/s
-• Magnetometer: 186° S</div>
-    </section>
+awaiting emergency trigger from client or gateway...</div>
+  </section>
 
-    <!-- 5 Live Sensor Telemetry Cards -->
-    <section class="grid-sensors">
+  <!-- Live 5-Sensor Telemetry Grid -->
+  <section class="panel">
+    <div class="panel-label-row">
+      <span class="panel-label">// live sensor telemetry (5/5)</span>
+      <span class="panel-meta">precision hardware readouts</span>
+    </div>
+
+    <div class="sensor-grid">
       <!-- 1. Pedometer -->
-      <div class="sensor-card">
-        <div class="sensor-top">
-          <span class="sensor-name">Pedometer</span>
-          <div class="sensor-icon-wrap">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 16v-2.38C4 11.5 6.5 9 9.5 9H11"/>
-              <path d="M20 20v-2.38c0-2.12-2.5-4.62-5.5-4.62H13"/>
-              <circle cx="12" cy="5" r="2"/>
-            </svg>
-          </div>
+      <div class="sensor-tile">
+        <span class="tile-label">// 01 pedometer</span>
+        <div class="tile-val-row">
+          <span class="tile-value" id="val-steps">0</span>
+          <span class="tile-unit">steps</span>
         </div>
-        <div>
-          <div class="sensor-val"><span id="val-steps">0</span> <span class="sensor-unit">steps</span></div>
-          <div class="sensor-sub">Distance: <strong id="val-distance">0.00</strong> km</div>
-        </div>
+        <span class="tile-sub" id="val-distance">dist: 0.00 km</span>
       </div>
 
       <!-- 2. Ambient Light -->
-      <div class="sensor-card">
-        <div class="sensor-top">
-          <span class="sensor-name">Ambient Light</span>
-          <div class="sensor-icon-wrap" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="4"/>
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-            </svg>
-          </div>
+      <div class="sensor-tile">
+        <span class="tile-label">// 02 light meter</span>
+        <div class="tile-val-row">
+          <span class="tile-value" id="val-lux">0</span>
+          <span class="tile-unit">lx</span>
         </div>
-        <div>
-          <div class="sensor-val"><span id="val-lux">53</span> <span class="sensor-unit">lx</span></div>
-          <div class="sensor-sub" id="val-light-state">Illumination: Normal Indoor</div>
-        </div>
+        <span class="tile-sub" id="val-light-state">ambient lux</span>
       </div>
 
       <!-- 3. Accelerometer -->
-      <div class="sensor-card">
-        <div class="sensor-top">
-          <span class="sensor-name">Accelerometer</span>
-          <div class="sensor-icon-wrap" style="color: #06b6d4; background: rgba(6, 182, 212, 0.12);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-          </div>
+      <div class="sensor-tile">
+        <span class="tile-label">// 03 accelerometer</span>
+        <div class="tile-val-row">
+          <span class="tile-value" id="val-accel">0.0</span>
+          <span class="tile-unit">m/s²</span>
         </div>
-        <div>
-          <div class="sensor-val"><span id="val-accel">9.7</span> <span class="sensor-unit">m/s²</span></div>
-          <div class="sensor-sub" id="val-accel-state">Gravity Magnitude: Normal (1.0g)</div>
-        </div>
+        <span class="tile-sub">magnitude vector</span>
       </div>
 
       <!-- 4. Gyroscope -->
-      <div class="sensor-card">
-        <div class="sensor-top">
-          <span class="sensor-name">Gyroscope</span>
-          <div class="sensor-icon-wrap" style="color: #a855f7; background: rgba(168, 85, 247, 0.12);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-          </div>
+      <div class="sensor-tile">
+        <span class="tile-label">// 04 gyroscope</span>
+        <div class="tile-val-row">
+          <span class="tile-value" id="val-gyro">0.0</span>
+          <span class="tile-unit">rad/s</span>
         </div>
-        <div>
-          <div class="sensor-val"><span id="val-gyro">0.2</span> <span class="sensor-unit">rad/s</span></div>
-          <div class="sensor-sub">Angular Velocity: Stable</div>
-        </div>
+        <span class="tile-sub">angular rotation</span>
       </div>
 
-      <!-- 5. Magnetometer (Compass) -->
-      <div class="sensor-card">
-        <div class="sensor-top">
-          <span class="sensor-name">Magnetometer</span>
-          <div class="sensor-icon-wrap" style="color: #ec4899; background: rgba(236, 72, 153, 0.12);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 19 21 12 17 5 21 12 2"/>
-            </svg>
+      <!-- 5. Magnetometer & Compass -->
+      <div class="sensor-tile">
+        <span class="tile-label">// 05 magnetometer</span>
+        <div class="compass-display">
+          <div class="compass-ring">
+            <div class="compass-pointer" id="compass-needle"></div>
           </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <div class="sensor-val"><span id="val-heading">186</span>° <span class="sensor-unit" id="val-cardinal">S</span></div>
-            <div class="sensor-sub">Heading: Bearing South</div>
-          </div>
-          <div class="compass-container">
-            <div class="compass-dial">
-              <div class="compass-needle" id="compass-needle" style="transform: rotate(186deg);"></div>
-              <div class="compass-center"></div>
+            <div class="tile-val-row">
+              <span class="tile-value" id="val-heading">0</span>
+              <span class="tile-unit">°</span>
+              <span class="tile-unit" id="val-cardinal">N</span>
             </div>
+            <span class="tile-sub">azimuth bearing</span>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lower Section: Controls & Telephony + Stream -->
+  <div class="grid-2col">
+    <!-- Telephony & Actions -->
+    <section class="panel">
+      <div class="panel-label-row">
+        <span class="panel-label">// telephony & trigger link</span>
+        <span class="panel-meta">pipewire / ofono</span>
+      </div>
+
+      <div class="key-value-list">
+        <div class="kv-item">
+          <span class="kv-key">handsfree interface</span>
+          <span class="kv-val">/org/pipewire/telephony/ag1</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-key">gateway ble device</span>
+          <span class="kv-val">redmi note 10 (08:1c:6e:5f:10:f7)</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-key">last caller extracted</span>
+          <span class="kv-val" id="last-call-num">none</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
+        <button type="button" class="action-btn solid" onclick="triggerSimulatedCall()">
+          [trigger call test]
+        </button>
+        <button type="button" class="action-btn" onclick="triggerSimulatedAlert()">
+          [simulate telemetry]
+        </button>
+        <button type="button" class="action-btn" onclick="clearFeed()">
+          [clear log]
+        </button>
       </div>
     </section>
 
-    <!-- Telephony & Server Action Panels -->
-    <section class="bottom-row">
-      <!-- Call Telephony Status -->
-      <div class="panel-box">
-        <h3>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-          PipeWire Bluetooth Handsfree Telephony
-        </h3>
-        <div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">Last Monitored Phone Number:</div>
-          <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono); color: #38bdf8;" id="last-call-num">
-            +918714711540
-          </div>
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-danger" onclick="triggerSimulatedAlert()">🚨 Simulate Sensor Alert</button>
-          <button class="btn" onclick="triggerSimulatedCall()">📞 Simulate Call</button>
-        </div>
+    <!-- Activity Stream -->
+    <section class="panel">
+      <div class="panel-label-row">
+        <span class="panel-label">// system activity log</span>
+        <span class="panel-meta">realtime event stream</span>
       </div>
 
-      <!-- Real-Time Activity Feed -->
-      <div class="panel-box">
-        <h3>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8;">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
-          </svg>
-          Live Activity Stream
-        </h3>
-        <div class="feed-list" id="feed-list">
-          <div class="feed-item">
-            <span>[System Ready] Telemetry Server active on port 8765</span>
-            <span style="color: var(--text-muted);">Boot</span>
-          </div>
+      <div class="stream-list" id="feed-list">
+        <div class="stream-item">
+          <span>system initialized • waiting for events</span>
+          <span class="stream-time">boot</span>
         </div>
       </div>
     </section>
-  </main>
+  </div>
 
-  <!-- Footer -->
+  <!-- Minimal Footer -->
   <footer>
-    RakshaNet Server Control Interface • Autonomous Emergency Telemetry Gateway
+    rakshanet server • technical telemetry control system
   </footer>
+</div>
 
-  <script>
-    let ws = null;
-    let audioAlarmEnabled = true;
-    let audioCtx = null;
+<script>
+  let ws = null;
+  let audioAlarmEnabled = true;
+  let audioCtx = null;
 
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+  }
 
-    function playBeep(freq = 880, duration = 0.2) {
-      if (!audioAlarmEnabled) return;
-      try {
-        initAudio();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {}
-    }
+  function playBeep(freq = 880, duration = 0.2) {
+    if (!audioAlarmEnabled) return;
+    try {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
 
-    function toggleAudioAlarm() {
-      audioAlarmEnabled = !audioAlarmEnabled;
-      const btn = document.getElementById('btn-sound-toggle');
-      btn.textContent = audioAlarmEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-      btn.className = audioAlarmEnabled ? 'btn btn-primary' : 'btn';
-      if (audioAlarmEnabled) playBeep(520, 0.15);
-    }
+  function toggleAudioAlarm() {
+    audioAlarmEnabled = !audioAlarmEnabled;
+    const btn = document.getElementById('sound-btn');
+    btn.textContent = audioAlarmEnabled ? '[sound: on]' : '[sound: off]';
+    if (audioAlarmEnabled) playBeep(520, 0.15);
+  }
 
-    function connectWebSocket() {
-      const loc = window.location;
-      // Connect to port 8765 on same host
-      const wsUrl = 'ws://' + loc.hostname + ':8765';
-      const wsBadge = document.getElementById('ws-badge');
-      const wsText = document.getElementById('ws-status-text');
+  function connectWebSocket() {
+    const loc = window.location;
+    const wsUrl = 'ws://' + loc.hostname + ':8765';
+    const wsTag = document.getElementById('ws-tag');
 
-      wsText.textContent = 'WS: Connecting...';
+    wsTag.textContent = 'ws: [connecting...]';
+    wsTag.className = 'status-tag';
+
+    try {
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        wsBadge.className = 'badge online';
-        wsText.textContent = 'WS: Connected (' + loc.hostname + ':8765)';
-        addFeedItem('WebSocket client connected to server');
+        wsTag.className = 'status-tag active';
+        wsTag.textContent = 'ws: [' + loc.hostname + ':8765]';
+        addFeedItem('websocket client connected to server');
       };
 
       ws.onmessage = (event) => {
@@ -727,160 +574,160 @@ Live Sensors (5/5):
           const msg = JSON.parse(event.data);
           handleIncomingMessage(msg);
         } catch (e) {
-          // If raw text
           if (event.data.includes('Live Sensors') || event.data.includes('Rakshak Alert')) {
-            updateTelemetryDisplay(event.data, 'Direct WebSocket');
+            updateTelemetryDisplay(event.data, 'direct websocket');
           }
         }
       };
 
       ws.onclose = () => {
-        wsBadge.className = 'badge';
-        wsText.textContent = 'WS: Disconnected (reconnecting...)';
+        wsTag.className = 'status-tag warn';
+        wsTag.textContent = 'ws: [reconnecting...]';
         setTimeout(connectWebSocket, 2000);
       };
 
       ws.onerror = () => {
-        ws.close();
+        ws?.close();
       };
+    } catch (e) {
+      setTimeout(connectWebSocket, 2000);
     }
+  }
 
-    function handleIncomingMessage(msg) {
-      if (msg.type === 'TELEMETRY_RECEIVED') {
-        const content = msg.content || '';
-        const source = msg.source || 'Bluetooth BLE / MAP';
-        const sender = msg.sender || '';
-        updateTelemetryDisplay(content, sender ? `${sender} via ${source}` : source);
-        playBeep(980, 0.3);
-      } else if (msg.type === 'CALL_DETECTED') {
-        document.getElementById('last-call-num').textContent = msg.number;
-        addFeedItem(`📞 Call Detected: ${msg.number} (${msg.state || 'active'})`, 'alert');
-        playBeep(660, 0.2);
-      } else if (msg.type === 'SERVER_READY') {
-        if (msg.last_number) {
-          document.getElementById('last-call-num').textContent = msg.last_number;
-        }
-        if (msg.latest_telemetry && msg.latest_telemetry.content) {
-          const t = msg.latest_telemetry;
-          updateTelemetryDisplay(t.content, t.sender ? `${t.sender} via ${t.source}` : t.source);
-        }
+  function handleIncomingMessage(msg) {
+    if (msg.type === 'TELEMETRY_RECEIVED') {
+      const content = msg.content || '';
+      const source = msg.source || 'bluetooth ble / map';
+      const sender = msg.sender || '';
+      updateTelemetryDisplay(content, sender ? `${sender} via ${source}` : source);
+      playBeep(920, 0.25);
+    } else if (msg.type === 'CALL_DETECTED') {
+      document.getElementById('last-call-num').textContent = msg.number;
+      addFeedItem(`call detected from ${msg.number} (${msg.state || 'active'})`, true);
+      playBeep(640, 0.2);
+    } else if (msg.type === 'SERVER_READY') {
+      if (msg.last_number) {
+        document.getElementById('last-call-num').textContent = msg.last_number;
       }
-    }
-
-    function updateTelemetryDisplay(text, source = 'Bluetooth BLE / MAP') {
-      const rawBox = document.getElementById('raw-telemetry-box');
-      rawBox.textContent = text.trim();
-
-      const panel = document.getElementById('emergency-panel');
-      panel.className = 'emergency-panel'; // Active red border & glow
-
-      document.getElementById('source-badge').textContent = `Source: ${source}`;
-      const now = new Date();
-      document.getElementById('time-badge').textContent = now.toLocaleTimeString();
-
-      // Parse sensor values via Regex
-      const pMatch = text.match(/Pedometer:\s*(\d+)\s*steps\s*\(([\d\.]+)\s*km\)/);
-      if (pMatch) {
-        document.getElementById('val-steps').textContent = pMatch[1];
-        document.getElementById('val-distance').textContent = pMatch[2];
-      }
-
-      const lMatch = text.match(/Light:\s*([\d\.]+)\s*lx/);
-      if (lMatch) {
-        document.getElementById('val-lux').textContent = Math.round(lMatch[1]);
-        const lux = parseFloat(lMatch[1]);
-        document.getElementById('val-light-state').textContent = lux < 20 ? 'Dark / Night' : lux > 500 ? 'Bright Sunlight' : 'Normal Indoor';
-      }
-
-      const aMatch = text.match(/Accelerometer:\s*([\d\.]+)\s*m\/s[²2]/);
-      if (aMatch) {
-        document.getElementById('val-accel').textContent = aMatch[1];
-      }
-
-      const gMatch = text.match(/Gyroscope:\s*([\d\.]+)\s*rad\/s/);
-      if (gMatch) {
-        document.getElementById('val-gyro').textContent = gMatch[1];
-      }
-
-      const mMatch = text.match(/Magnetometer:\s*(\d+)°\s*([A-Za-z]+)/);
-      if (mMatch) {
-        const heading = parseInt(mMatch[1]);
-        const cardinal = mMatch[2];
-        document.getElementById('val-heading').textContent = heading;
-        document.getElementById('val-cardinal').textContent = cardinal;
-        document.getElementById('compass-needle').style.transform = `rotate(${heading}deg)`;
-      }
-
-      addFeedItem(`🚨 Telemetry Alert from ${source}`, 'alert');
-    }
-
-    function addFeedItem(text, type = 'normal') {
-      const feed = document.getElementById('feed-list');
-      const item = document.createElement('div');
-      item.className = 'feed-item' + (type === 'alert' ? ' alert' : '');
-      const timeStr = new Date().toLocaleTimeString();
-      item.innerHTML = `<span>${text}</span><span style="color: var(--text-muted);">${timeStr}</span>`;
-      feed.insertBefore(item, feed.firstChild);
-      while (feed.children.length > 20) {
-        feed.removeChild(feed.lastChild);
+      if (msg.latest_telemetry && msg.latest_telemetry.content) {
+        const t = msg.latest_telemetry;
+        updateTelemetryDisplay(t.content, t.sender ? `${t.sender} via ${t.source}` : t.source);
       }
     }
+  }
 
-    function copyAlertText() {
-      const text = document.getElementById('raw-telemetry-box').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Alert text copied to clipboard!');
-      });
+  function updateTelemetryDisplay(text, source = 'bluetooth ble / map') {
+    const rawBox = document.getElementById('raw-telemetry-box');
+    rawBox.textContent = text.trim();
+
+    const panel = document.getElementById('alert-panel');
+    panel.classList.add('alert-active');
+
+    document.getElementById('alert-source-meta').textContent = `source: [${source}]`;
+    const now = new Date();
+    document.getElementById('alert-time-meta').textContent = `time: [${now.toLocaleTimeString()}]`;
+
+    // Parse sensors
+    const pMatch = text.match(/Pedometer:\s*(\d+)\s*steps\s*\(([\d\.]+)\s*km\)/i);
+    if (pMatch) {
+      document.getElementById('val-steps').textContent = pMatch[1];
+      document.getElementById('val-distance').textContent = `dist: ${pMatch[2]} km`;
     }
 
-    function triggerSimulatedAlert() {
-      const sample = `Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n• Pedometer: ${Math.floor(Math.random() * 50)} steps (0.03 km)\n• Light: ${Math.floor(Math.random() * 80 + 30)} lx\n• Accelerometer: ${(Math.random() * 1.5 + 9.2).toFixed(1)} m/s²\n• Gyroscope: ${(Math.random() * 0.5).toFixed(1)} rad/s\n• Magnetometer: ${Math.floor(Math.random() * 360)}° S`;
-      
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'CLIENT_TELEMETRY',
-          report: sample,
-          sender: 'Dashboard Simulator'
-        }));
-      } else {
-        updateTelemetryDisplay(sample, 'Local Simulator');
-      }
+    const lMatch = text.match(/Light:\s*([\d\.]+)\s*lx/i);
+    if (lMatch) {
+      const lux = parseFloat(lMatch[1]);
+      document.getElementById('val-lux').textContent = Math.round(lux);
+      document.getElementById('val-light-state').textContent = lux < 20 ? 'dark / night' : lux > 500 ? 'bright sunlight' : 'normal ambient';
     }
 
-    function triggerSimulatedCall() {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'PING'
-        }));
-      }
-      fetch('/api/trigger-call', { method: 'POST' }).catch(() => {});
-      addFeedItem('📞 Simulated Call Test Triggered');
+    const aMatch = text.match(/Accelerometer:\s*([\d\.]+)\s*m\/s[²2]/i);
+    if (aMatch) {
+      document.getElementById('val-accel').textContent = aMatch[1];
     }
 
-    async function updateServerStatus() {
-      try {
-        const res = await fetch('/api/status');
-        if (res.ok) {
-          const data = await res.json();
-          const badge = document.getElementById('gateway-app-badge');
-          const text = document.getElementById('gateway-app-text');
-          if (data.gateway_online) {
-            badge.className = 'badge online';
-            text.textContent = 'Gateway App: Online (' + data.gateway_ips.join(', ') + ')';
-          } else {
-            badge.className = 'badge offline';
-            text.textContent = 'Gateway App: Disconnected';
-          }
-        }
-      } catch (e) {}
+    const gMatch = text.match(/Gyroscope:\s*([\d\.]+)\s*rad\/s/i);
+    if (gMatch) {
+      document.getElementById('val-gyro').textContent = gMatch[1];
     }
 
-    // Auto connect on page load
-    window.addEventListener('load', () => {
-      connectWebSocket();
-      setInterval(updateServerStatus, 2000);
-      updateServerStatus();
+    const mMatch = text.match(/Magnetometer:\s*(\d+)°\s*([A-Za-z]+)/i);
+    if (mMatch) {
+      const heading = parseInt(mMatch[1]);
+      const cardinal = mMatch[2].toUpperCase();
+      document.getElementById('val-heading').textContent = heading;
+      document.getElementById('val-cardinal').textContent = cardinal;
+      document.getElementById('compass-needle').style.transform = `rotate(${heading}deg)`;
+    }
+
+    addFeedItem(`telemetry payload received from ${source}`, true);
+  }
+
+  function addFeedItem(text, isAlert = false) {
+    const feed = document.getElementById('feed-list');
+    const item = document.createElement('div');
+    item.className = 'stream-item' + (isAlert ? ' alert-item' : '');
+    const timeStr = new Date().toLocaleTimeString();
+    item.innerHTML = `<span>${text}</span><span class="stream-time">${timeStr}</span>`;
+    feed.insertBefore(item, feed.firstChild);
+    while (feed.children.length > 25) {
+      feed.removeChild(feed.lastChild);
+    }
+  }
+
+  function clearFeed() {
+    const feed = document.getElementById('feed-list');
+    feed.innerHTML = '<div class="stream-item"><span>log buffer cleared</span><span class="stream-time">now</span></div>';
+  }
+
+  function copyAlertText() {
+    const text = document.getElementById('raw-telemetry-box').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      addFeedItem('telemetry payload copied to clipboard');
     });
-  </script>
+  }
+
+  function triggerSimulatedAlert() {
+    const sample = `Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n• Pedometer: ${Math.floor(Math.random() * 50)} steps (0.03 km)\n• Light: ${Math.floor(Math.random() * 80 + 30)} lx\n• Accelerometer: ${(Math.random() * 1.5 + 9.2).toFixed(1)} m/s²\n• Gyroscope: ${(Math.random() * 0.5).toFixed(1)} rad/s\n• Magnetometer: ${Math.floor(Math.random() * 360)}° S`;
+    
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'CLIENT_TELEMETRY',
+        report: sample,
+        sender: 'dashboard simulator'
+      }));
+    } else {
+      updateTelemetryDisplay(sample, 'local simulator');
+    }
+  }
+
+  function triggerSimulatedCall() {
+    fetch('/api/trigger-call', { method: 'POST' }).catch(() => {});
+    addFeedItem('simulated call trigger dispatched', true);
+  }
+
+  async function updateServerStatus() {
+    try {
+      const res = await fetch('/api/status');
+      if (res.ok) {
+        const data = await res.json();
+        const tag = document.getElementById('gateway-tag');
+        if (data.gateway_online) {
+          tag.className = 'status-tag active';
+          tag.textContent = 'gateway: [' + data.gateway_ips.join(', ') + ']';
+        } else {
+          tag.className = 'status-tag warn';
+          tag.textContent = 'gateway: [disconnected]';
+        }
+      }
+    } catch (e) {}
+  }
+
+  window.addEventListener('load', () => {
+    connectWebSocket();
+    setInterval(updateServerStatus, 2000);
+    updateServerStatus();
+  });
+</script>
 </body>
 </html>
