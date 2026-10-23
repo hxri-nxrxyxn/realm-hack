@@ -71,17 +71,20 @@
 				</div>
 			</div>
 
-			<!-- Live Frequency Badge in Menu Bar -->
-			<div class="flex items-center gap-2">
+			<!-- Live Frequency Pill in Menu Bar -->
+			<div class="flex items-center shrink-0">
 				{#if sensorManager.isListening}
-					<div class="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-emerald-300 font-mono">
-						<span class="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-						<span>{sensorManager.updateRateHz} Hz</span>
+					<div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-bold text-emerald-300 font-mono whitespace-nowrap shadow-sm ring-1 ring-emerald-500/20">
+						<span class="relative flex h-2.5 w-2.5 shrink-0">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+							<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+						</span>
+						<span class="whitespace-nowrap tracking-wide">{sensorManager.updateRateHz} Hz</span>
 					</div>
 				{:else}
-					<div class="flex items-center gap-2 rounded-full border border-border bg-secondary/80 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-muted-foreground">
-						<span class="h-2.5 w-2.5 rounded-full bg-muted-foreground"></span>
-						<span>Idle</span>
+					<div class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/80 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold text-muted-foreground font-mono whitespace-nowrap shadow-sm">
+						<span class="h-2 w-2 rounded-full bg-muted-foreground/60 shrink-0"></span>
+						<span class="whitespace-nowrap tracking-wide">0 Hz</span>
 					</div>
 				{/if}
 			</div>
