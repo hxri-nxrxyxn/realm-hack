@@ -156,30 +156,26 @@
 		<SmsSenderCard />
 	</main>
 
-	<!-- Stagnant Fixed Bottom Bar with Emerald Gradient and Grid Pattern -->
+	<!-- Stagnant Fixed Bottom Bar -->
 	<div class="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-safe bg-background/90 backdrop-blur-2xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
 		<div class="mx-auto max-w-5xl">
 			{#if sensorManager.isListening}
 				<button
 					type="button"
-					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 hover:from-emerald-900 hover:to-emerald-900 text-emerald-100 border-2 border-emerald-500/50 ring-1 ring-emerald-500/30 cursor-pointer flex items-center justify-center gap-3"
+					class="w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/70 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 hover:from-emerald-750 hover:via-emerald-650 hover:to-emerald-750 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.stop()}
 				>
-					<!-- Technical Grid Pattern Overlay -->
-					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#10b98125_1px,transparent_1px),linear-gradient(to_bottom,#10b98125_1px,transparent_1px)] bg-[size:14px_14px]"></div>
-					<Square class="h-6 w-6 fill-current relative z-10" />
-					<span class="tracking-wide relative z-10">Stop Sensors</span>
+					<Square class="h-6 w-6 fill-current" />
+					<span class="tracking-wide">Stop Sensors</span>
 				</button>
 			{:else}
 				<button
 					type="button"
-					class="relative overflow-hidden w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
+					class="w-full h-15 sm:h-16 text-lg sm:text-xl font-black rounded-2xl shadow-xl shadow-emerald-950/60 transition-all duration-200 active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white border border-emerald-400/40 ring-1 ring-emerald-400/20 cursor-pointer flex items-center justify-center gap-3"
 					onclick={() => sensorManager.start()}
 				>
-					<!-- Technical Grid Pattern Overlay -->
-					<div class="pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff25_1px,transparent_1px),linear-gradient(to_bottom,#ffffff25_1px,transparent_1px)] bg-[size:14px_14px]"></div>
-					<Play class="h-6 w-6 fill-current relative z-10" />
-					<span class="tracking-wide relative z-10">Start Sensors</span>
+					<Play class="h-6 w-6 fill-current" />
+					<span class="tracking-wide">Start Sensors</span>
 				</button>
 			{/if}
 		</div>
