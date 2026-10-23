@@ -95,6 +95,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Error loading dashboard: {e}")
         elif self.path == "/api/status":
+            phone_clients = [str(c.remote_address[0]) for c in self.server_instance.connected_clients if str(c.remote_address[0]) != '127.0.0.1']
             status_data = {
                 "server": "RakshaNet Telemetry Server",
                 "local_ip": self.server_instance.local_ip,
@@ -102,6 +103,8 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "http_port": self.server_instance.http_port,
                 "bt_mac": self.server_instance.bt_mac,
                 "clients_count": len(self.server_instance.connected_clients),
+                "gateway_online": len(phone_clients) > 0,
+                "gateway_ips": phone_clients,
                 "last_call_number": self.server_instance.last_detected_number or "9995283835",
                 "timestamp": format_timestamp()
             }
@@ -162,6 +165,7 @@ class TelemetryServer:
         self.latest_telemetry = None
         self.processed_msg_ids = set()
         self.map_session_path = None
+        self.pending_call_trigger = None
 
     def display_telemetry(self, raw_content: str, sender: str = "", source: str = "BLE / Bluetooth MAP"):
         """
@@ -247,6 +251,13 @@ class TelemetryServer:
         self.last_call_time = now
         self.last_call_number = clean_num
         self.last_detected_number = clean_num
+        self.pending_call_trigger = {
+            "number": clean_num,
+            "name": str(name),
+            "state": str(state),
+            "timestamp": now
+        }
+
         print("\n" + "=" * 60)
         print(f"[{format_timestamp()}] 📞 NEW CALL EXTRACTED FROM BLUETOOTH HANDSFREE")
         print("=" * 60)
@@ -254,6 +265,13 @@ class TelemetryServer:
         if name:
             print(f"  👤 Contact Name : {name}")
         print(f"  ⚡ Call State   : {state}")
+
+        phone_clients = [str(c.remote_address[0]) for c in self.connected_clients if str(c.remote_address[0]) != '127.0.0.1']
+        if not phone_clients:
+            print(f"  ⚠️ \033[1;31mWARNING: Phone A Gateway App is DISCONNECTED!\033[0m")
+            print(f"     Phone A's screen is off or app is closed. Trigger queued for auto-send upon reconnect.")
+        else:
+            print(f"  📶 Gateway Link : \033[1;32mConnected ({', '.join(phone_clients)})\033[0m")
         print("=" * 60 + "\n", flush=True)
 
         payload = {
@@ -285,6 +303,20 @@ class TelemetryServer:
         }
         await websocket.send(json.dumps(welcome_payload))
 
+        # Replay any recent pending call trigger (<45s old) to newly connected phone
+        if self.pending_call_trigger and client_addr[0] != '127.0.0.1':
+            age = time.time() - self.pending_call_trigger.get("timestamp", 0)
+            if age < 45:
+                print(f"[{format_timestamp()}] 🚀 Replaying queued call trigger for {self.pending_call_trigger['number']} to Gateway ({client_addr[0]})!")
+                replay_payload = {
+                    "type": "CALL_DETECTED",
+                    "number": self.pending_call_trigger["number"],
+                    "name": self.pending_call_trigger.get("name", ""),
+                    "state": self.pending_call_trigger.get("state", "active"),
+                    "timestamp": format_timestamp()
+                }
+                await websocket.send(json.dumps(replay_payload))
+
         try:
             async for raw_message in websocket:
                 try:
@@ -297,6 +329,7 @@ class TelemetryServer:
                         self.display_telemetry(report, sender=sender, source="Direct App WebSocket")
                     elif msg_type == "SMS_SENT":
                         num = data.get("number", "Unknown")
+                        self.pending_call_trigger = None
                         print(f"[{format_timestamp()}] ✅ Phone confirmed: Auto-sent SMS to \033[1;32m{num}\033[0m")
                     elif msg_type == "PING":
                         await websocket.send(json.dumps({"type": "PONG", "timestamp": format_timestamp()}))

@@ -112,17 +112,17 @@ public class SmsReceiver extends BroadcastReceiver {
 
             Log.d(TAG, "🚨 MATCHED TARGET NUMBER (" + TARGET_PHONE_SUFFIX + ")! Triggering app auto-open, urgent notification, and alarm vibration.");
 
-            // Function A: Wake up screen and acquire temporary wake lock
+            // Function A: Instantly bring app to foreground (zero delay before anything else)
+            launchMainActivity(context, sender, completeMessage);
+
+            // Function B: Wake up screen and acquire temporary wake lock
             acquireWakeLock(context);
 
-            // Function B: Trigger aggressive emergency vibration
+            // Function C: Trigger aggressive emergency vibration
             triggerEmergencyVibration(context);
 
-            // Function C: Post High-Priority Heads-Up Notification with FullScreenIntent
+            // Function D: Post High-Priority Heads-Up Notification with FullScreenIntent
             postHighPriorityNotification(context, sender, completeMessage);
-
-            // Function D: Automatically bring app to foreground
-            launchMainActivity(context, sender, completeMessage);
 
             // Function E: Notify Capacitor frontend
             DefaultSmsPlugin.handleIncomingSms(sender, completeMessage, timestamp);
@@ -381,7 +381,8 @@ public class SmsReceiver extends BroadcastReceiver {
             Intent.FLAG_ACTIVITY_NEW_TASK |
             Intent.FLAG_ACTIVITY_CLEAR_TOP |
             Intent.FLAG_ACTIVITY_SINGLE_TOP |
-            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
+            Intent.FLAG_ACTIVITY_NO_ANIMATION
         );
         launchIntent.putExtra("sms_sender", sender);
         launchIntent.putExtra("sms_message", message);
@@ -430,11 +431,11 @@ public class SmsReceiver extends BroadcastReceiver {
             Log.e(TAG, "Direct startActivity failed", e);
         }
 
-        // 3. Repeated foreground re-assertion to overcome in-call dialers and post-call screens (Truecaller)
+        // 3. Repeated ultra-fast foreground re-assertion to overcome in-call dialers and post-call screens (Truecaller)
         final Bundle finalOpts = optsBundle;
         final Context appContext = context.getApplicationContext();
         Handler handler = new Handler(Looper.getMainLooper());
-        int[] retryDelays = { 1000, 2500, 4500, 7000 };
+        int[] retryDelays = { 300, 700, 1500, 3000, 5000 };
         for (int delay : retryDelays) {
             handler.postDelayed(() -> {
                 try {

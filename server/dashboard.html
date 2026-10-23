@@ -484,6 +484,10 @@
           <div class="badge-dot"></div>
           <span>BLE Gateway: 08:1C:6E:5F:10:F7</span>
         </div>
+        <div class="badge offline" id="gateway-app-badge">
+          <div class="badge-dot"></div>
+          <span id="gateway-app-text">Gateway App: Offline</span>
+        </div>
         <button class="btn btn-primary" id="btn-sound-toggle" onclick="toggleAudioAlarm()">
           🔊 Sound: ON
         </button>
@@ -853,8 +857,30 @@ Live Sensors (5/5):
       addFeedItem('📞 Simulated Call Test Triggered');
     }
 
+    async function updateServerStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (res.ok) {
+          const data = await res.json();
+          const badge = document.getElementById('gateway-app-badge');
+          const text = document.getElementById('gateway-app-text');
+          if (data.gateway_online) {
+            badge.className = 'badge online';
+            text.textContent = 'Gateway App: Online (' + data.gateway_ips.join(', ') + ')';
+          } else {
+            badge.className = 'badge offline';
+            text.textContent = 'Gateway App: Disconnected';
+          }
+        }
+      } catch (e) {}
+    }
+
     // Auto connect on page load
-    window.addEventListener('load', connectWebSocket);
+    window.addEventListener('load', () => {
+      connectWebSocket();
+      setInterval(updateServerStatus, 2000);
+      updateServerStatus();
+    });
   </script>
 </body>
 </html>
