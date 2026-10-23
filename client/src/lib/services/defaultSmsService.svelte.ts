@@ -23,8 +23,8 @@ class DefaultSmsManager {
 	isDefault = $state(false);
 	statusChecked = $state(false);
 	triggerCount = $state(0);
-	lastTrigger = $state<SmsTriggerEvent | null>(null);
-	triggerHistory = $state<SmsTriggerEvent[]>([]);
+	lastTrigger = $state.raw<SmsTriggerEvent | null>(null);
+	triggerHistory = $state.raw<SmsTriggerEvent[]>([]);
 	authorizedNumber = $state("9495364448");
 
 	private listenerHandle: PluginListenerHandle | null = null;

@@ -200,7 +200,7 @@
 						Trigger History ({defaultSmsManager.triggerHistory.length - 1} earlier)
 					</h4>
 					<div class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
-						{#each defaultSmsManager.triggerHistory.slice(1) as item}
+						{#each defaultSmsManager.triggerHistory.slice(1) as item (item.timestamp)}
 							<div class="rounded-lg border border-border/50 bg-secondary/40 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
 								<div class="min-w-0">
 									<div class="flex items-center gap-2">

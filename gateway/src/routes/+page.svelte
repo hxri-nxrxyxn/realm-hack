@@ -14,7 +14,7 @@
 
   let phoneNumber = $state('');
   let message = $state(defaultMessage);
-  let statusMessage = $state<{ text: string; type: 'success' | 'error' } | null>(null);
+  let statusMessage = $state.raw<{ text: string; type: 'success' | 'error' } | null>(null);
   let isSending = $state(false);
 
   let serverUrl = $state(defaultServerUrl);

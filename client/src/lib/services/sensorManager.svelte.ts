@@ -44,7 +44,7 @@ export class SensorManager {
 	syncStatus = $state<"idle" | "syncing" | "error" | "connected">("idle");
 	syncMessage = $state("");
 
-	status = $state<SensorStatus>({
+	status = $state.raw<SensorStatus>({
 		accelerometerAvailable: false,
 		gyroscopeAvailable: false,
 		magnetometerAvailable: false,
@@ -55,9 +55,9 @@ export class SensorManager {
 		isNative: false
 	});
 
-	accelerometer = $state<AccelerometerData>({ x: 0, y: 0, z: 9.81, magnitude: 9.81 });
-	gyroscope = $state<GyroscopeData>({ x: 0, y: 0, z: 0, rate: 0 });
-	magnetometer = $state<MagnetometerData>({
+	accelerometer = $state.raw<AccelerometerData>({ x: 0, y: 0, z: 9.81, magnitude: 9.81 });
+	gyroscope = $state.raw<GyroscopeData>({ x: 0, y: 0, z: 0, rate: 0 });
+	magnetometer = $state.raw<MagnetometerData>({
 		x: 0,
 		y: 0,
 		z: 0,
@@ -65,23 +65,23 @@ export class SensorManager {
 		heading: 0,
 		cardinal: "N"
 	});
-	ambientLight = $state<AmbientLightData>({
+	ambientLight = $state.raw<AmbientLightData>({
 		lux: 200,
 		environment: "Living Room / Normal Indoor"
 	});
-	pedometer = $state<PedometerData>({
+	pedometer = $state.raw<PedometerData>({
 		steps: 0,
 		detectedSteps: 0,
 		distanceKm: 0,
 		caloriesBurned: 0
 	});
 
-	// History buffer for charts (last 25 data points)
-	accelHistory = $state<number[]>([]);
-	gyroHistory = $state<number[]>([]);
-	magHistory = $state<number[]>([]);
-	lightHistory = $state<number[]>([]);
-	stepHistory = $state<number[]>([]);
+	// History buffer for charts (last 25 data points, updated via $state.raw for maximum performance)
+	accelHistory = $state.raw<number[]>([]);
+	gyroHistory = $state.raw<number[]>([]);
+	magHistory = $state.raw<number[]>([]);
+	lightHistory = $state.raw<number[]>([]);
+	stepHistory = $state.raw<number[]>([]);
 
 	lastUpdateTimestamp = $state(Date.now());
 	updateRateHz = $state(0);
@@ -90,6 +90,7 @@ export class SensorManager {
 	private lastRateCheck = Date.now();
 	private simInterval: ReturnType<typeof setInterval> | null = null;
 	private syncInterval: ReturnType<typeof setInterval> | null = null;
+	private rateMeterInterval: ReturnType<typeof setInterval> | null = null;
 	private listenerHandle: { remove: () => Promise<void> } | null = null;
 
 	constructor() {
@@ -234,6 +235,11 @@ export class SensorManager {
 			this.syncInterval = null;
 		}
 
+		if (this.rateMeterInterval) {
+			clearInterval(this.rateMeterInterval);
+			this.rateMeterInterval = null;
+		}
+
 		this.isListening = false;
 		this.status.isListening = false;
 		this.updateRateHz = 0;
@@ -265,25 +271,26 @@ export class SensorManager {
 		this.lastUpdateTimestamp = data.timestamp;
 		this.isListening = data.isListening;
 
-		// Append to history buffers
-		this.pushHistory(this.accelHistory, data.accelerometer.magnitude);
-		this.pushHistory(this.gyroHistory, data.gyroscope.rate);
-		this.pushHistory(this.magHistory, data.magnetometer.fieldStrength);
-		this.pushHistory(this.lightHistory, data.ambientLight.lux);
-		this.pushHistory(this.stepHistory, data.pedometer.steps);
+		// Append to history buffers with immutable slice to pair with $state.raw for ultra-fast render cycles
+		this.accelHistory = this.pushHistory(this.accelHistory, data.accelerometer.magnitude);
+		this.gyroHistory = this.pushHistory(this.gyroHistory, data.gyroscope.rate);
+		this.magHistory = this.pushHistory(this.magHistory, data.magnetometer.fieldStrength);
+		this.lightHistory = this.pushHistory(this.lightHistory, data.ambientLight.lux);
+		this.stepHistory = this.pushHistory(this.stepHistory, data.pedometer.steps);
 
 		this.updateCount++;
 	}
 
-	private pushHistory(arr: number[], val: number) {
-		arr.push(val);
-		if (arr.length > 25) {
-			arr.shift();
+	private pushHistory(arr: number[], val: number): number[] {
+		if (arr.length >= 25) {
+			return [...arr.slice(1), val];
 		}
+		return [...arr, val];
 	}
 
 	private startRateMeter() {
-		setInterval(() => {
+		if (this.rateMeterInterval) clearInterval(this.rateMeterInterval);
+		this.rateMeterInterval = setInterval(() => {
 			if (!this.isListening) {
 				this.updateRateHz = 0;
 				return;
