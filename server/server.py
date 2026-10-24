@@ -33,9 +33,9 @@ from gi.repository import GLib
 import websockets
 
 try:
-    from server.audio_bridge import AudioConversationBridge
+    from server.audio_bridge import AudioConversationBridge, ensure_audio_sinks
 except ImportError:
-    from audio_bridge import AudioConversationBridge
+    from audio_bridge import AudioConversationBridge, ensure_audio_sinks
 
 def get_local_ip():
     """Detect the local LAN / Wi-Fi IP address."""
@@ -204,6 +204,7 @@ class TelemetryServer:
         self.map_session_path = None
         self.pending_call_trigger = None
         self.auto_answer_mode = True  # Real-time voice AI conversation enabled
+        ensure_audio_sinks()
         self.audio_bridge = AudioConversationBridge(on_event=self.on_audio_bridge_event)
 
     def on_audio_bridge_event(self, event):

@@ -50,76 +50,104 @@ def is_call_active():
     except Exception:
         pass
 
-    # Check 2: Active bluez call audio input source in pactl
+    # Check 2: Active bluez call audio in pw-link
     try:
-        res = subprocess.run(["pactl", "list", "sources", "short"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        for line in res.stdout.strip().splitlines():
-            parts = line.split()
-            if len(parts) >= 2:
-                name = parts[1]
-                if "bluez_input" in name:
-                    return True
+        links = subprocess.getoutput('pw-link -io')
+        if any('bluez_output' in l or 'bluez_input' in l for l in links.splitlines()):
+            return True
     except Exception:
         pass
 
     return False
 
-def get_recording_source():
-    """Finds active Bluetooth phone input source or falls back to default."""
+def ensure_audio_sinks():
+    """Ensures call_playback and call_record null-sinks exist in PulseAudio/PipeWire and are linked to laptop audio."""
     try:
-        res = subprocess.run(["pactl", "list", "sources", "short"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        for line in res.stdout.strip().splitlines():
+        sinks = subprocess.getoutput('pactl list sinks short')
+        for name, desc in [('call_playback', 'RakshaCallPlayback'), ('call_record', 'RakshaCallRecord')]:
+            if name not in sinks:
+                subprocess.run(['pactl', 'load-module', 'module-null-sink', f'sink_name={name}', f'sink_properties=device.description={desc}'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Link call_playback monitor to laptop speakers so operator hears all played responses
+        for ch in ['FL', 'FR']:
+            subprocess.run(['pw-link', f'call_playback:monitor_{ch}', f'alsa_output.pci-0000_00_1f.3.analog-stereo:playback_{ch}'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+def link_call_audio(max_wait_sec=2.5):
+    """
+    Dynamically routes bidirectional call audio streams:
+    1. AI response + operator mic -> Cellular call (caller hears both AI reply and operator speaking).
+    2. Incoming caller voice -> Laptop speakers (operator hears caller) + call_record sink (for pure 10s chunk recording).
+    """
+    ensure_audio_sinks()
+    start_time = time.time()
+    linked = False
+    
+    while time.time() - start_time < max_wait_sec:
+        res = subprocess.getoutput('pw-link -io')
+        bluez_in = [l for l in res.splitlines() if 'bluez_output' in l and ':input_' in l]
+        bluez_out = [l for l in res.splitlines() if 'bluez_input' in l and ':output_' in l]
+        
+        if bluez_in or bluez_out:
+            # 1. Route AI playback and laptop mic to the caller (Uplink)
+            for p in bluez_in:
+                ch = "FL" if "FL" in p else "FR"
+                subprocess.run(['pw-link', f'call_playback:monitor_{ch}', p], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['pw-link', f'alsa_input.pci-0000_00_1f.3.analog-stereo:capture_{ch}', p], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # 2. Route caller audio to record sink and laptop speakers (Downlink)
+            for p in bluez_out:
+                ch = "FL" if "FL" in p else "FR"
+                subprocess.run(['pw-link', p, f'call_record:playback_{ch}'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['pw-link', p, f'alsa_output.pci-0000_00_1f.3.analog-stereo:playback_{ch}'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            linked = True
+            break
+        time.sleep(0.2)
+
+    return linked
+
+def get_recording_source():
+    """Finds active call_record.monitor sink or fallback."""
+    try:
+        sources = subprocess.getoutput('pactl list sources short')
+        if 'call_record.monitor' in sources:
+            return 'call_record.monitor'
+        for line in sources.strip().splitlines():
             parts = line.split()
-            if len(parts) >= 2:
-                name = parts[1]
-                if "bluez" in name and "monitor" not in name:
-                    return name
+            if len(parts) >= 2 and 'bluez_input' in parts[1]:
+                return parts[1]
     except Exception:
         pass
     return "default"
 
-def get_playback_sinks():
-    """Finds all sinks to play to (default laptop speakers + bluetooth phone sink)."""
-    sinks = ["default"]
-    try:
-        res = subprocess.run(["pactl", "list", "sinks", "short"], stdout=subprocess.PIPE, text=True)
-        for line in res.stdout.strip().splitlines():
-            parts = line.split()
-            if len(parts) >= 2:
-                name = parts[1]
-                if "bluez" in name and name not in sinks:
-                    sinks.append(name)
-    except Exception:
-        pass
-    return sinks
-
 def play_audio(audio_path):
-    """Plays audio through laptop speaker and Bluetooth phone call output."""
+    """
+    Plays audio through call_playback sink.
+    Since call_playback is linked to both:
+    1. alsa_output (laptop speakers)
+    2. bluez_output (Bluetooth SCO cellular uplink to caller)
+    BOTH the operator at the laptop and the caller on the phone hear the audio simultaneously!
+    """
     if not os.path.exists(audio_path) or os.path.getsize(audio_path) < 100:
         return
 
-    sinks = get_playback_sinks()
-    procs = []
-    for sink in sinks:
-        env = os.environ.copy()
-        if sink != "default":
-            env["PULSE_SINK"] = sink
-        try:
-            p = subprocess.Popen(
-                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "error", audio_path],
-                env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            procs.append(p)
-        except Exception as e:
-            print(f"[{format_timestamp()}] ⚠️ Audio playback error on {sink}: {e}")
+    ensure_audio_sinks()
+    link_call_audio(max_wait_sec=1.0)
 
-    for p in procs:
-        try:
-            p.wait(timeout=20)
-        except Exception:
-            p.kill()
+    env = os.environ.copy()
+    env["PULSE_SINK"] = "call_playback"
+    try:
+        p = subprocess.Popen(
+            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "error", audio_path],
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        p.wait(timeout=25)
+    except Exception as e:
+        print(f"[{format_timestamp()}] ⚠️ Audio playback error: {e}")
 
 class AudioConversationBridge:
     def __init__(self, primary_url=PRIMARY_WEBHOOK_URL, fallback_url=FALLBACK_WEBHOOK_URL, on_event=None):
@@ -154,7 +182,8 @@ class AudioConversationBridge:
     def notify_call_started(self):
         """Called by server when a call on Redmi Note 10 starts."""
         self.call_in_progress = True
-        self.log("📞 Call started on Redmi Note 10 -> Starting 10s audio AI recording loop.")
+        self.log("📞 Call started on Redmi Note 10 -> Establishing bidirectional audio bridge & starting 10s AI recording loop.")
+        link_call_audio(max_wait_sec=2.5)
         self.start(force=True)
 
     def notify_call_ended(self):
@@ -164,6 +193,7 @@ class AudioConversationBridge:
         self.stop()
 
     def record_chunk(self, duration=10, output_path=TEMP_RECORD_PATH):
+        link_call_audio(max_wait_sec=0.5)
         source = get_recording_source()
         cmd = [
             "ffmpeg", "-y",
