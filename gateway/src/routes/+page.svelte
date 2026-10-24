@@ -86,15 +86,23 @@
   function connectWebSocket() {
     if (typeof window === 'undefined') return;
 
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
     try {
       if (ws) {
-        ws.close();
+        try { ws.close(); } catch {}
       }
 
       ws = new WebSocket(serverUrl);
 
       ws.onopen = () => {
         wsConnected = true;
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
         console.log('Connected to WebSocket server:', serverUrl);
       };
 
@@ -141,7 +149,6 @@
 
       ws.onerror = (err) => {
         console.warn('WS Error:', err);
-        ws?.close();
       };
     } catch (err) {
       console.error('WS Connection error:', err);

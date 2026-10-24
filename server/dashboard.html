@@ -887,13 +887,35 @@ awaiting emergency trigger from client or gateway...</div>
       const res = await fetch('/api/status');
       if (res.ok) {
         const data = await res.json();
+
+        // 1. Live Bluetooth Status Tag
+        const bleTag = document.getElementById('ble-tag');
+        if (bleTag && data.bt_mac) {
+          if (data.bluetooth_connected) {
+            bleTag.className = 'status-tag active';
+            bleTag.textContent = 'ble: [' + data.bt_mac.toLowerCase() + ']';
+          } else {
+            bleTag.className = 'status-tag warn';
+            bleTag.textContent = 'ble: [disconnected]';
+          }
+        }
+
+        // 2. Comprehensive Gateway Status Tag
         const tag = document.getElementById('gateway-tag');
-        if (data.gateway_online) {
-          tag.className = 'status-tag active';
-          tag.textContent = 'gateway: [' + data.gateway_ips.join(', ') + ']';
-        } else {
-          tag.className = 'status-tag warn';
-          tag.textContent = 'gateway: [disconnected]';
+        if (tag) {
+          if (data.gateway_online) {
+            tag.className = 'status-tag active';
+            if (data.phone_app_connected && data.gateway_ips && data.gateway_ips.length > 0) {
+              tag.textContent = 'gateway: [' + data.gateway_ips.join(', ') + ']';
+            } else if (data.telephony_ag_online) {
+              tag.textContent = 'gateway: [cellular hfp]';
+            } else {
+              tag.textContent = 'gateway: [online]';
+            }
+          } else {
+            tag.className = 'status-tag warn';
+            tag.textContent = 'gateway: [disconnected]';
+          }
         }
         if (data.audio_bridge) {
           updateAudioBridgeUI(data.audio_bridge);

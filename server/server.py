@@ -101,15 +101,24 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(500, f"Error loading dashboard: {e}")
         elif self.path == "/api/status":
             phone_clients = [str(c.remote_address[0]) for c in self.server_instance.connected_clients if str(c.remote_address[0]) != '127.0.0.1']
+            bt_connected = self.server_instance.check_bluetooth_connected()
+            telephony_ag_online = self.server_instance.check_telephony_ag_online()
+            gateway_online = (bt_connected and telephony_ag_online) or (len(phone_clients) > 0)
+            gateway_mode = "cellular_hfp" if (bt_connected and telephony_ag_online) else ("app_only" if len(phone_clients) > 0 else "offline")
+
             status_data = {
                 "server": "RakshaNet Telemetry Server",
                 "local_ip": self.server_instance.local_ip,
                 "ws_port": self.server_instance.port,
                 "http_port": self.server_instance.http_port,
                 "bt_mac": self.server_instance.bt_mac,
-                "clients_count": len(self.server_instance.connected_clients),
-                "gateway_online": len(phone_clients) > 0,
+                "bluetooth_connected": bt_connected,
+                "telephony_ag_online": telephony_ag_online,
+                "gateway_online": gateway_online,
+                "gateway_mode": gateway_mode,
+                "phone_app_connected": len(phone_clients) > 0,
                 "gateway_ips": phone_clients,
+                "clients_count": len(self.server_instance.connected_clients),
                 "last_call_number": self.server_instance.last_detected_number or "8714711540",
                 "telemetry_count": self.server_instance.telemetry_count,
                 "audio_bridge": {
@@ -212,6 +221,25 @@ class TelemetryServer:
     def on_audio_bridge_event(self, event):
         if self.loop:
             asyncio.run_coroutine_threadsafe(self.broadcast(event), self.loop)
+
+    def check_bluetooth_connected(self) -> bool:
+        """Check if Phone A (bt_mac) is connected to BlueZ."""
+        try:
+            bus = dbus.SystemBus()
+            dev = bus.get_object("org.bluez", f"/org/bluez/hci0/dev_{self.bt_mac.replace(':', '_')}")
+            props = dbus.Interface(dev, "org.freedesktop.DBus.Properties")
+            return bool(props.Get("org.bluez.Device1", "Connected"))
+        except Exception:
+            return False
+
+    def check_telephony_ag_online(self) -> bool:
+        """Check if PipeWire Telephony Handsfree Audio Gateway service is online."""
+        try:
+            bus = dbus.SessionBus()
+            bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
+            return True
+        except Exception:
+            return False
 
     def display_telemetry(self, raw_content: str, sender: str = "", source: str = "BLE / Bluetooth MAP"):
         """
@@ -316,11 +344,10 @@ class TelemetryServer:
         print(f"  ⚡ Call State   : {state}")
 
         phone_clients = [str(c.remote_address[0]) for c in self.connected_clients if str(c.remote_address[0]) != '127.0.0.1']
-        if not phone_clients:
-            print(f"  ⚠️ \033[1;31mWARNING: Phone A Gateway App is DISCONNECTED!\033[0m")
-            print(f"     Phone A's screen is off or app is closed. Trigger queued for auto-send upon reconnect.")
+        if phone_clients:
+            print(f"  📶 Gateway App Link : \033[1;32mConnected ({', '.join(phone_clients)})\033[0m")
         else:
-            print(f"  📶 Gateway Link : \033[1;32mConnected ({', '.join(phone_clients)})\033[0m")
+            print(f"  ℹ️ Phone A Gateway App is in background/standby (Direct Bluetooth MAP active)")
         print("=" * 60 + "\n", flush=True)
 
         payload = {
@@ -570,8 +597,10 @@ class TelemetryServer:
                         self.display_telemetry(raw_message, sender="Client App", source="Raw App WebSocket")
                     else:
                         print(f"[{format_timestamp()}] 📩 Raw text from client: {raw_message}")
-        except websockets.exceptions.ConnectionClosed:
-            pass
+        except websockets.exceptions.ConnectionClosed as e:
+            print(f"[{format_timestamp()}] 🔌 ConnectionClosed from {client_addr}: code={e.code}, reason={e.reason!r}")
+        except Exception as e:
+            print(f"[{format_timestamp()}] ⚠️ WS Exception from {client_addr}: {type(e).__name__}: {e}")
         finally:
             self.connected_clients.remove(websocket)
             print(f"[{format_timestamp()}] 🔌 Client disconnected: {client_addr}")
@@ -738,7 +767,30 @@ class TelemetryServer:
                 pass
             return True
 
-        init_session()
+        def populate_initial_history():
+            """Pre-populate existing message IDs so startup doesn't flood past SMS history."""
+            nonlocal mas_interface
+            if not mas_interface:
+                return
+            try:
+                msgs = mas_interface.ListMessages('inbox', {'MaxListCount': dbus.UInt16(100)})
+                latest_alert = None
+                latest_sender = "+918714711540"
+                for path, meta in msgs.items():
+                    msg_id = str(path)
+                    self.processed_msg_ids.add(msg_id)
+                    subj = str(meta.get('Subject', ''))
+                    if ('Rakshak' in subj or 'Sensors' in subj or 'Live Sensors' in subj or 'Pedometer' in subj) and latest_alert is None:
+                        full_content = fetch_full_message(path)
+                        latest_alert = full_content if full_content else subj
+                        latest_sender = str(meta.get('SenderAddress', ''))
+                if latest_alert and self.telemetry_count == 0:
+                    self.display_telemetry(latest_alert, sender=latest_sender, source="Bluetooth BLE / MAP (Initial State)")
+            except Exception:
+                pass
+
+        if init_session():
+            populate_initial_history()
         GLib.timeout_add_seconds(1, periodic_inbox_check)
 
         glib_loop = GLib.MainLoop()
