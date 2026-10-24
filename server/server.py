@@ -380,8 +380,8 @@ class TelemetryServer:
                 except Exception:
                     pass
 
-            print(f"[{format_timestamp()}] 🎙️ Call connected! Activating Real-Time AI Audio Conversation Bridge...")
-            self.audio_bridge.start()
+            print(f"[{format_timestamp()}] 🎙️ Call connected on Redmi Note 10! Activating Real-Time AI Audio Conversation Bridge...")
+            self.audio_bridge.notify_call_started()
 
         threading.Thread(target=_answer, daemon=True).start()
 
@@ -609,8 +609,8 @@ class TelemetryServer:
             pass
 
         def on_call_removed(path):
-            print(f"[{format_timestamp()}] 📴 Call ended ({path}). Pausing audio conversation bridge.")
-            self.audio_bridge.stop()
+            print(f"[{format_timestamp()}] 📴 Call ended ({path}). Stopping audio conversation bridge.")
+            self.audio_bridge.notify_call_ended()
 
         bus.add_signal_receiver(
             on_call_added,
