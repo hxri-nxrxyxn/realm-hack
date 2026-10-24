@@ -7,7 +7,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Looper;
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSObject;
@@ -24,12 +29,33 @@ import com.getcapacitor.annotation.PermissionCallback;
         @Permission(
             strings = { Manifest.permission.ACTIVITY_RECOGNITION },
             alias = "activityRecognition"
+        ),
+        @Permission(
+            strings = { Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION },
+            alias = "location"
         )
     }
 )
 public class RakshakSensorsPlugin extends Plugin implements SensorEventListener {
 
     private SensorManager sensorManager;
+    private LocationManager locationManager;
+    private Location lastKnownLocation;
+
+    private final LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            if (location != null) {
+                lastKnownLocation = location;
+            }
+        }
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+        @Override
+        public void onProviderEnabled(String provider) {}
+        @Override
+        public void onProviderDisabled(String provider) {}
+    };
 
     private Sensor accelerometer;
     private Sensor gyroscope;
@@ -67,6 +93,9 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
         super.load();
         Context context = getContext();
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        try {
+            locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        } catch (Exception ignored) {}
 
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -97,6 +126,12 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
         }
         ret.put("hasActivityRecognitionPermission", hasActivityPerm);
 
+        boolean hasLocPerm = ContextCompat.checkSelfPermission(
+            getContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED;
+        ret.put("hasLocationPermission", hasLocPerm);
+
         call.resolve(ret);
     }
 
@@ -108,6 +143,10 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
                 return;
             }
         }
+        if (getPermissionState("location") != com.getcapacitor.PermissionState.GRANTED) {
+            requestPermissionForAlias("location", call, "permissionCallback");
+            return;
+        }
         JSObject result = new JSObject();
         result.put("granted", true);
         call.resolve(result);
@@ -116,9 +155,68 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
     @PermissionCallback
     private void permissionCallback(PluginCall call) {
         JSObject result = new JSObject();
-        boolean granted = (getPermissionState("activityRecognition") == com.getcapacitor.PermissionState.GRANTED);
-        result.put("granted", granted);
+        boolean actGranted = (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) ||
+            (getPermissionState("activityRecognition") == com.getcapacitor.PermissionState.GRANTED);
+        boolean locGranted = (getPermissionState("location") == com.getcapacitor.PermissionState.GRANTED);
+        result.put("granted", actGranted && locGranted);
         call.resolve(result);
+    }
+
+    public Location getBestLocation() {
+        if (lastKnownLocation != null && (System.currentTimeMillis() - lastKnownLocation.getTime() < 60000)) {
+            return lastKnownLocation;
+        }
+        if (locationManager == null) {
+            return lastKnownLocation;
+        }
+        Context context = getContext();
+        boolean hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        boolean hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (!hasFine && !hasCoarse) {
+            return lastKnownLocation;
+        }
+
+        Location best = lastKnownLocation;
+        String[] providers = new String[] {
+            LocationManager.FUSED_PROVIDER,
+            LocationManager.GPS_PROVIDER,
+            LocationManager.NETWORK_PROVIDER,
+            LocationManager.PASSIVE_PROVIDER
+        };
+
+        for (String provider : providers) {
+            try {
+                Location l = locationManager.getLastKnownLocation(provider);
+                if (l != null) {
+                    if (best == null || l.getTime() > best.getTime()) {
+                        best = l;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        if (best != null) {
+            lastKnownLocation = best;
+        }
+        return best;
+    }
+
+    @PluginMethod
+    public void getLocation(PluginCall call) {
+        Location loc = getBestLocation();
+        JSObject res = new JSObject();
+        if (loc != null) {
+            res.put("success", true);
+            res.put("hasCoords", true);
+            res.put("latitude", loc.getLatitude());
+            res.put("longitude", loc.getLongitude());
+            res.put("accuracy", round(loc.getAccuracy()));
+            res.put("altitude", round((float) loc.getAltitude()));
+            res.put("mapsUrl", "https://maps.google.com/?q=" + loc.getLatitude() + "," + loc.getLongitude());
+        } else {
+            res.put("success", false);
+            res.put("hasCoords", false);
+        }
+        call.resolve(res);
     }
 
     @PluginMethod
@@ -150,6 +248,23 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
                 sensorManager.registerListener(this, stepDetector, SensorManager.SENSOR_DELAY_FASTEST);
             }
 
+            // Register continuous location updates
+            if (locationManager != null) {
+                Context context = getContext();
+                boolean hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                boolean hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                if (hasFine || hasCoarse) {
+                    try {
+                        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, locationListener, Looper.getMainLooper());
+                        }
+                        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, locationListener, Looper.getMainLooper());
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
             isListening = true;
         }
 
@@ -164,6 +279,11 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
         if (sensorManager != null && isListening) {
             sensorManager.unregisterListener(this);
             isListening = false;
+        }
+        if (locationManager != null) {
+            try {
+                locationManager.removeUpdates(locationListener);
+            } catch (Exception ignored) {}
         }
 
         JSObject res = new JSObject();
@@ -333,6 +453,23 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
         pedometer.put("caloriesBurned", round((float) calories));
         data.put("pedometer", pedometer);
 
+        // 6. Location Coords
+        JSObject locationObj = new JSObject();
+        Location loc = getBestLocation();
+        if (loc != null) {
+            double lat = loc.getLatitude();
+            double lon = loc.getLongitude();
+            locationObj.put("latitude", lat);
+            locationObj.put("longitude", lon);
+            locationObj.put("accuracy", round(loc.getAccuracy()));
+            locationObj.put("altitude", round((float) loc.getAltitude()));
+            locationObj.put("mapsUrl", "https://maps.google.com/?q=" + lat + "," + lon);
+            locationObj.put("hasCoords", true);
+        } else {
+            locationObj.put("hasCoords", false);
+        }
+        data.put("location", locationObj);
+
         data.put("timestamp", now);
         data.put("isListening", isListening);
 
@@ -384,6 +521,11 @@ public class RakshakSensorsPlugin extends Plugin implements SensorEventListener 
         if (sensorManager != null && isListening) {
             sensorManager.unregisterListener(this);
             isListening = false;
+        }
+        if (locationManager != null) {
+            try {
+                locationManager.removeUpdates(locationListener);
+            } catch (Exception ignored) {}
         }
         super.handleOnDestroy();
     }

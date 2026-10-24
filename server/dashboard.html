@@ -408,7 +408,7 @@ awaiting emergency trigger from client or gateway...</div>
   <!-- Live 5-Sensor Telemetry Grid -->
   <section class="panel">
     <div class="panel-label-row">
-      <span class="panel-label">// live sensor telemetry (5/5)</span>
+      <span class="panel-label">// live sensor & gps telemetry</span>
       <span class="panel-meta">precision hardware readouts</span>
     </div>
 
@@ -469,6 +469,17 @@ awaiting emergency trigger from client or gateway...</div>
             <span class="tile-sub">azimuth bearing</span>
           </div>
         </div>
+      </div>
+
+      <!-- 6. GPS Location Coords -->
+      <div class="sensor-tile">
+        <span class="tile-label">// 06 gps coordinates</span>
+        <div class="tile-val-row" style="margin-top: 0.2rem;">
+          <span class="tile-value" id="val-coords" style="font-size: 1.05rem; letter-spacing: -0.5px;">9.0644, 76.5570</span>
+        </div>
+        <span class="tile-sub">
+          <a id="link-maps" href="https://maps.google.com/?q=9.064458,76.557012" target="_blank" style="color: var(--brutal-yellow); text-decoration: underline;">view in maps ↗</a>
+        </span>
       </div>
     </div>
   </section>
@@ -729,6 +740,21 @@ awaiting emergency trigger from client or gateway...</div>
       document.getElementById('compass-needle').style.transform = `rotate(${heading}deg)`;
     }
 
+    const cMatch = text.match(/(?:Coordinates|Coords|Location):\s*([-\d\.]+)[,\s]+([-\d\.]+)/i);
+    if (cMatch) {
+      const lat = parseFloat(cMatch[1]).toFixed(6);
+      const lon = parseFloat(cMatch[2]).toFixed(6);
+      document.getElementById('val-coords').textContent = `${lat}, ${lon}`;
+      const mapLink = document.getElementById('link-maps');
+      mapLink.href = `https://maps.google.com/?q=${lat},${lon}`;
+    }
+
+    const mapUrlMatch = text.match(/https:\/\/maps\.google\.com\/\?q=([^\s\n\r]+)/i);
+    if (mapUrlMatch) {
+      const mapLink = document.getElementById('link-maps');
+      mapLink.href = mapUrlMatch[0];
+    }
+
     addFeedItem(`telemetry update #${telemetryUpdateCount} received from ${source}`, true);
   }
 
@@ -836,7 +862,9 @@ awaiting emergency trigger from client or gateway...</div>
   }
 
   function triggerSimulatedAlert() {
-    const sample = `Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n• Pedometer: ${Math.floor(Math.random() * 50)} steps (0.03 km)\n• Light: ${Math.floor(Math.random() * 80 + 30)} lx\n• Accelerometer: ${(Math.random() * 1.5 + 9.2).toFixed(1)} m/s²\n• Gyroscope: ${(Math.random() * 0.5).toFixed(1)} rad/s\n• Magnetometer: ${Math.floor(Math.random() * 360)}° S`;
+    const lat = (9.064458 + (Math.random() - 0.5) * 0.005).toFixed(6);
+    const lon = (76.557012 + (Math.random() - 0.5) * 0.005).toFixed(6);
+    const sample = `Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n• Pedometer: ${Math.floor(Math.random() * 50)} steps (0.03 km)\n• Light: ${Math.floor(Math.random() * 80 + 30)} lx\n• Accelerometer: ${(Math.random() * 1.5 + 9.2).toFixed(1)} m/s²\n• Gyroscope: ${(Math.random() * 0.5).toFixed(1)} rad/s\n• Magnetometer: ${Math.floor(Math.random() * 360)}° S\n• Coords: ${lat}, ${lon}\n• Maps: https://maps.google.com/?q=${lat},${lon}`;
     
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({

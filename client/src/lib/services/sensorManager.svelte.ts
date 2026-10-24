@@ -7,7 +7,8 @@ import type {
 	GyroscopeData,
 	MagnetometerData,
 	AmbientLightData,
-	PedometerData
+	PedometerData,
+	LocationData
 } from "#lib/types/sensor.js";
 
 // Native plugin interface
@@ -20,12 +21,14 @@ interface RakshakSensorsNativePlugin {
 		pedometerHardwareAvailable: boolean;
 		isListening: boolean;
 		hasActivityRecognitionPermission: boolean;
+		hasLocationPermission?: boolean;
 	}>;
 	requestSensorPermissions(): Promise<{ granted: boolean }>;
 	startListening(): Promise<{ success: boolean; message: string }>;
 	stopListening(): Promise<{ success: boolean; message: string }>;
 	resetStepCount(): Promise<{ success: boolean; currentSteps: number }>;
 	getLatestReadings(): Promise<FullSensorPayload>;
+	getLocation(): Promise<LocationData & { success: boolean }>;
 	addListener(
 		eventName: "onSensorUpdate",
 		listenerFunc: (data: FullSensorPayload) => void
@@ -74,6 +77,14 @@ export class SensorManager {
 		detectedSteps: 0,
 		distanceKm: 0,
 		caloriesBurned: 0
+	});
+
+	location = $state.raw<LocationData>({
+		latitude: 0,
+		longitude: 0,
+		accuracy: 0,
+		mapsUrl: "",
+		hasCoords: false
 	});
 
 	// History buffer for charts (last 25 data points, updated via $state.raw for maximum performance)
@@ -128,6 +139,8 @@ export class SensorManager {
 		this.magHistory = Array(20).fill(45);
 		this.lightHistory = Array(20).fill(250);
 		this.stepHistory = Array(20).fill(0);
+
+		await this.refreshLocation();
 	}
 
 	private setupFallback() {
@@ -209,6 +222,7 @@ export class SensorManager {
 		}
 
 		this.startRateMeter();
+		this.refreshLocation();
 		if (this.backendSyncEnabled) {
 			this.startBackendSync();
 		}
@@ -262,6 +276,54 @@ export class SensorManager {
 		this.stepHistory = Array(20).fill(0);
 	}
 
+	async refreshLocation(): Promise<LocationData> {
+		if (this.isNative) {
+			try {
+				const res = await NativeSensors.getLocation();
+				if (res && res.hasCoords && res.latitude !== 0) {
+					this.location = {
+						latitude: res.latitude,
+						longitude: res.longitude,
+						accuracy: res.accuracy,
+						altitude: res.altitude,
+						mapsUrl: res.mapsUrl || `https://maps.google.com/?q=${res.latitude},${res.longitude}`,
+						hasCoords: true
+					};
+					return this.location;
+				}
+			} catch (e) {
+				console.warn("Native getLocation failed, trying web fallback:", e);
+			}
+		}
+
+		if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+			try {
+				const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+					navigator.geolocation.getCurrentPosition(resolve, reject, {
+						enableHighAccuracy: true,
+						timeout: 4000,
+						maximumAge: 30000
+					});
+				});
+				const lat = pos.coords.latitude;
+				const lon = pos.coords.longitude;
+				this.location = {
+					latitude: lat,
+					longitude: lon,
+					accuracy: pos.coords.accuracy,
+					altitude: pos.coords.altitude ?? undefined,
+					mapsUrl: `https://maps.google.com/?q=${lat},${lon}`,
+					hasCoords: true
+				};
+				return this.location;
+			} catch (e) {
+				console.debug("Geolocation unavailable:", e);
+			}
+		}
+
+		return this.location;
+	}
+
 	private handleSensorData(data: FullSensorPayload) {
 		this.accelerometer = data.accelerometer;
 		this.gyroscope = data.gyroscope;
@@ -270,6 +332,10 @@ export class SensorManager {
 		this.pedometer = data.pedometer;
 		this.lastUpdateTimestamp = data.timestamp;
 		this.isListening = data.isListening;
+
+		if (data.location && data.location.hasCoords) {
+			this.location = data.location;
+		}
 
 		// Append to history buffers with immutable slice to pair with $state.raw for ultra-fast render cycles
 		this.accelHistory = this.pushHistory(this.accelHistory, data.accelerometer.magnitude);

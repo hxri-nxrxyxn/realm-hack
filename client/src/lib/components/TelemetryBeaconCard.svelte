@@ -60,7 +60,7 @@
 						</span>
 					</div>
 					<p class="text-xs text-red-200/80 mt-0.5">
-						Streaming 5-sensor telemetry to Gateway <span class="font-bold text-white font-mono">{telemetryBeacon.targetNumber}</span>
+						Streaming 5 sensors + GPS coordinates to Gateway <span class="font-bold text-white font-mono">{telemetryBeacon.targetNumber}</span>
 					</p>
 				</div>
 			</div>
@@ -180,7 +180,7 @@
 						</span>
 					</div>
 					<p class="text-xs text-muted-foreground mt-0.5">
-						Recurring 60s live 5-sensor telemetry stream to Server via SMS
+						Recurring 60s live 5-sensor telemetry + GPS coords to Server via SMS
 					</p>
 				</div>
 			</div>

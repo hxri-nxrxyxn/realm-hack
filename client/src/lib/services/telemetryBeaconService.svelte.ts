@@ -23,8 +23,9 @@ export class TelemetryBeaconService {
 		const gyro = sensorManager.gyroscope.rate.toFixed(1);
 		const heading = Math.round(sensorManager.magnetometer.heading);
 		const cardinal = sensorManager.magnetometer.cardinal;
+		const loc = sensorManager.location;
 
-		return [
+		const lines = [
 			"Rakshak Alert: Emergency assistance requested",
 			"",
 			"Live Sensors (5/5):",
@@ -33,17 +34,25 @@ export class TelemetryBeaconService {
 			`• Accelerometer: ${accel} m/s²`,
 			`• Gyroscope: ${gyro} rad/s`,
 			`• Magnetometer: ${heading}° ${cardinal}`
-		].join("\n");
+		];
+
+		if (loc && loc.hasCoords && loc.latitude !== 0) {
+			lines.push(`• Coords: ${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`);
+			lines.push(`• Maps: https://maps.google.com/?q=${loc.latitude.toFixed(6)},${loc.longitude.toFixed(6)}`);
+		}
+
+		return lines.join("\n");
 	}
 
 	async sendUpdate(): Promise<boolean> {
 		if (this.isSending) return false;
 		this.isSending = true;
 
-		// Ensure sensors are running to report fresh values
+		// Ensure sensors and location are fresh
 		if (!sensorManager.isListening) {
 			await sensorManager.start();
 		}
+		await sensorManager.refreshLocation();
 
 		const report = this.buildReport();
 		this.lastReport = report;

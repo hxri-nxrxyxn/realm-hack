@@ -29,18 +29,27 @@
 		const gyro = sensorManager.gyroscope.rate.toFixed(1);
 		const heading = Math.round(sensorManager.magnetometer.heading);
 		const cardinal = sensorManager.magnetometer.cardinal;
+		const loc = sensorManager.location;
 
-		return [
+		const lines = [
 			"Live Sensors (5/5):",
 			`• Pedometer: ${steps} steps (${distance} km)`,
 			`• Light: ${lux} lx`,
 			`• Accelerometer: ${accel} m/s²`,
 			`• Gyroscope: ${gyro} rad/s`,
 			`• Magnetometer: ${heading}° ${cardinal}`
-		].join("\n");
+		];
+
+		if (loc && loc.hasCoords && loc.latitude !== 0) {
+			lines.push(`• Coords: ${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`);
+			lines.push(`• Maps: https://maps.google.com/?q=${loc.latitude.toFixed(6)},${loc.longitude.toFixed(6)}`);
+		}
+
+		return lines.join("\n");
 	}
 
-	function appendSensorTelemetry() {
+	async function appendSensorTelemetry() {
+		await sensorManager.refreshLocation();
 		const report = buildTelemetryReport();
 		message = `Rakshak Alert: Emergency assistance requested\n\n${report}`;
 	}
@@ -50,6 +59,7 @@
 		isSending = true;
 		status = null;
 
+		await sensorManager.refreshLocation();
 		const telemetryReport = buildTelemetryReport();
 		let finalMessage = message.trim();
 
@@ -159,7 +169,7 @@
 			/>
 			<div class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium pt-0.5">
 				<ShieldCheck class="h-3.5 w-3.5 shrink-0" />
-				<span>Includes all 5 live sensor readings (Pedometer, Light, Accel, Gyro, Compass)</span>
+				<span>Includes all 5 live sensor readings + GPS Coords</span>
 			</div>
 		</div>
 

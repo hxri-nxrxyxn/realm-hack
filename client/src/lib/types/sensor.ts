@@ -30,6 +30,15 @@ export interface PedometerData {
 	caloriesBurned: number;
 }
 
+export interface LocationData {
+	latitude: number;
+	longitude: number;
+	accuracy?: number;
+	altitude?: number;
+	mapsUrl: string;
+	hasCoords: boolean;
+}
+
 export interface SensorStatus {
 	accelerometerAvailable: boolean;
 	gyroscopeAvailable: boolean;
@@ -38,6 +47,7 @@ export interface SensorStatus {
 	pedometerHardwareAvailable: boolean;
 	isListening: boolean;
 	hasActivityRecognitionPermission: boolean;
+	hasLocationPermission?: boolean;
 	isNative: boolean;
 }
 
@@ -47,6 +57,7 @@ export interface FullSensorPayload {
 	magnetometer: MagnetometerData;
 	ambientLight: AmbientLightData;
 	pedometer: PedometerData;
+	location?: LocationData;
 	timestamp: number;
 	isListening: boolean;
 }

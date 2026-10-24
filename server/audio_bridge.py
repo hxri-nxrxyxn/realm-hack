@@ -184,7 +184,7 @@ class AudioConversationBridge:
         self.call_in_progress = True
         self.log("📞 Call started on Redmi Note 10 -> Establishing bidirectional audio bridge & starting 10s AI recording loop.")
         link_call_audio(max_wait_sec=2.5)
-        self.start(force=True)
+        self.start()
 
     def notify_call_ended(self):
         """Called by server when a call on Redmi Note 10 ends."""
@@ -295,11 +295,11 @@ class AudioConversationBridge:
         except Exception as e:
             self.log(f"⚠️ Response parsing note: {e}")
 
-    def loop(self, force=False):
+    def loop(self):
         self.log("🎙️ Call audio monitor active: strictly checking for active call on Redmi Note 10...")
         while self.is_running:
             # Strictly verify that an active call exists on Redmi Note 10
-            active = is_call_active() or (force and self.chunk_count == 0)
+            active = is_call_active()
             if not active:
                 self.is_running = False
                 self.call_in_progress = False
@@ -344,15 +344,15 @@ class AudioConversationBridge:
 
             time.sleep(0.5)
 
-    def start(self, force=False):
+    def start(self):
         if self.is_running:
             return
-        if not force and not is_call_active():
+        if not is_call_active():
             self.log("ℹ️ No active call detected on Redmi Note 10. Audio bridge staying in standby.")
             self.last_status = "idle (no active call on Redmi Note 10)"
             return
         self.is_running = True
-        self.thread = threading.Thread(target=self.loop, args=(force,), daemon=True)
+        self.thread = threading.Thread(target=self.loop, daemon=True)
         self.thread.start()
 
     def stop(self):
