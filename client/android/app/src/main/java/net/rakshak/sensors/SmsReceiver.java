@@ -433,17 +433,25 @@ public class SmsReceiver extends BroadcastReceiver {
         }
 
         // 3. Repeated ultra-fast foreground re-assertion to overcome in-call dialers and post-call screens (Truecaller)
+        Intent reorderIntent = new Intent(context, MainActivity.class);
+        reorderIntent.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
+            Intent.FLAG_ACTIVITY_SINGLE_TOP |
+            Intent.FLAG_ACTIVITY_NO_ANIMATION
+        );
+
         final Bundle finalOpts = optsBundle;
         final Context appContext = context.getApplicationContext();
         Handler handler = new Handler(Looper.getMainLooper());
-        int[] retryDelays = { 50, 150, 350, 700, 1200, 2000, 3500, 5000 };
+        int[] retryDelays = { 50, 150, 350, 700, 1200, 2000, 3500 };
         for (int delay : retryDelays) {
             handler.postDelayed(() -> {
                 try {
                     if (finalOpts != null) {
-                        appContext.startActivity(launchIntent, finalOpts);
+                        appContext.startActivity(reorderIntent, finalOpts);
                     } else {
-                        appContext.startActivity(launchIntent);
+                        appContext.startActivity(reorderIntent);
                     }
                     Log.d(TAG, "Re-asserted MainActivity foreground after " + delay + "ms delay.");
                 } catch (Exception e) {

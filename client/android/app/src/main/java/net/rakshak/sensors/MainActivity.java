@@ -20,6 +20,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final int SMS_ROLE_REQUEST_CODE = 1001;
+    private static long lastProcessedSmsTime = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,9 +78,15 @@ public class MainActivity extends BridgeActivity {
         if (intent.hasExtra("sms_sender")) {
             String sender = intent.getStringExtra("sms_sender");
             String message = intent.getStringExtra("sms_message");
-            Log.d(TAG, "Processing SMS intent in MainActivity: " + sender + " -> " + message);
-            DefaultSmsPlugin.handleIncomingSms(sender, message, System.currentTimeMillis());
-            triggerVibration();
+            long now = System.currentTimeMillis();
+            if (now - lastProcessedSmsTime > 3000) {
+                lastProcessedSmsTime = now;
+                Log.d(TAG, "Processing SMS intent in MainActivity: " + sender + " -> " + message);
+                DefaultSmsPlugin.handleIncomingSms(sender, message, now);
+                triggerVibration();
+            } else {
+                Log.d(TAG, "Debounced duplicate SMS intent in MainActivity (<3s)");
+            }
             intent.removeExtra("sms_sender");
             intent.removeExtra("sms_message");
         }

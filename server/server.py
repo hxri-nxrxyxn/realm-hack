@@ -105,7 +105,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "clients_count": len(self.server_instance.connected_clients),
                 "gateway_online": len(phone_clients) > 0,
                 "gateway_ips": phone_clients,
-                "last_call_number": self.server_instance.last_detected_number or "9995283835",
+                "last_call_number": self.server_instance.last_detected_number or "8714711540",
                 "telemetry_count": self.server_instance.telemetry_count,
                 "timestamp": format_timestamp()
             }
@@ -245,7 +245,7 @@ class TelemetryServer:
         """Called from D-Bus thread when a call is extracted."""
         clean_num = str(number).strip()
         if not clean_num or clean_num == "Unknown":
-            clean_num = "9995283835"
+            clean_num = "8714711540"
 
         now = time.time()
         # Deduplicate triggers for the same number within 3 seconds
@@ -287,12 +287,83 @@ class TelemetryServer:
             "timestamp": format_timestamp()
         }
 
-        # 1. Direct Bluetooth MAP SMS dispatch to caller to guarantee delivery even if Phone A app is asleep
+        # 1. 1-Ring Auto-Hangup: Terminate trigger call after ~400ms to immediately free cellular modem and clear caller InCallUI
+        self.auto_hangup_call(raw_path)
+
+        # 2. Direct Bluetooth MAP SMS dispatch to caller to guarantee delivery even if Phone A app is asleep
         threading.Thread(target=self.push_sms_via_bluetooth_map, args=(clean_num, "received call. will get back to you shortly."), daemon=True).start()
 
-        # 2. WebSocket broadcast to connected apps
+        # 3. WebSocket broadcast to connected apps
         if self.loop:
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
+
+    def auto_hangup_call(self, raw_path=""):
+        """Terminates trigger call after 1 ring (< 0.5s) to release voice bearer and clear InCallUI on caller's phone."""
+        def _hangup():
+            time.sleep(0.4)  # 400ms allows 1 clean ring and caller ID capture
+            bus = dbus.SessionBus()
+            hung_up = False
+
+            # Strategy 1: Specific Call object Hangup
+            if raw_path:
+                try:
+                    call_obj = bus.get_object(self.telephony_service, raw_path)
+                    for iface in ["org.pipewire.Telephony.Call1", "org.ofono.VoiceCall"]:
+                        try:
+                            c = dbus.Interface(call_obj, iface)
+                            c.Hangup(timeout=1.0)
+                            hung_up = True
+                            print(f"[{format_timestamp()}] 📴 Hangup succeeded on {raw_path} via {iface}")
+                            break
+                        except Exception:
+                            pass
+                except Exception as e:
+                    pass
+
+            # Strategy 2: Iterate over any active calls from GetCalls()
+            try:
+                telephony = bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
+                vcm = dbus.Interface(telephony, "org.ofono.VoiceCallManager")
+                active_calls = vcm.GetCalls()
+                for c_path in active_calls.keys():
+                    try:
+                        c_obj = bus.get_object(self.telephony_service, c_path)
+                        for iface in ["org.pipewire.Telephony.Call1", "org.ofono.VoiceCall"]:
+                            try:
+                                c_iface = dbus.Interface(c_obj, iface)
+                                c_iface.Hangup(timeout=1.0)
+                                hung_up = True
+                                print(f"[{format_timestamp()}] 📴 Hangup succeeded on active call {c_path} via {iface}")
+                                break
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            # Strategy 3: VoiceCallManager.HangupAll() / AudioGateway1.HangupAll()
+            if not hung_up:
+                try:
+                    telephony = bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
+                    for iface in ["org.ofono.VoiceCallManager", "org.pipewire.Telephony.AudioGateway1"]:
+                        try:
+                            v = dbus.Interface(telephony, iface)
+                            v.HangupAll(timeout=1.0)
+                            hung_up = True
+                            print(f"[{format_timestamp()}] 📴 HangupAll succeeded via {iface}")
+                            break
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            if hung_up:
+                print(f"[{format_timestamp()}] ⚡ 1-Ring Trigger: Voice call auto-disconnected. Cellular voice channel released.")
+            else:
+                print(f"[{format_timestamp()}] ℹ️ Hangup finished or call already disconnected.")
+
+        threading.Thread(target=_hangup, daemon=True).start()
 
     def push_sms_via_bluetooth_map(self, target_number: str, message_text: str = "received call. will get back to you shortly."):
         """Pushes an SMS directly to Phone A via BlueZ MAP to send over cellular SIM."""
@@ -610,7 +681,7 @@ class TelemetryServer:
                     )
                     self.display_telemetry(sample_alert, sender="+919495364448", source="Simulated Test")
                 else:
-                    test_number = text if text else "9995283835"
+                    test_number = text if text else "8714711540"
                     print(f"[{format_timestamp()}] 🧪 Manual call trigger test with number: {test_number}")
                     self.on_call_detected(test_number, name="Test Caller", state="active")
         except asyncio.CancelledError:
