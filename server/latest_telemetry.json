@@ -1,0 +1,7 @@
+{
+  "content": "Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n\u2022 Pedometer: 0 steps (0.00 km)\n\u2022 Light: 450 lx\n\u2022 Accelerometer: 9.7 m/s\u00b2\n\u2022 Gyroscope: 0.0 rad/s\n\u2022 Magnetometer: 110\u00b0 E\n\u2022 Coords: 9.064476, 76.557016\n\u2022 Maps: https://maps.google.com/?q=9.064476,76.557016",
+  "sender": "+918714711540",
+  "source": "Bluetooth BLE / MAP",
+  "timestamp": "2026-10-24 14:45:07",
+  "update_count": 3
+}

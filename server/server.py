@@ -194,6 +194,27 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        elif self.path == "/api/telemetry":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                post_data = self.rfile.read(length).decode("utf-8")
+                try:
+                    payload = json.loads(post_data)
+                    report = payload.get("report") or payload.get("content") or post_data
+                    sender = payload.get("sender", "+918714711540")
+                except Exception:
+                    report = post_data
+                    sender = "+918714711540"
+                self.server_instance.display_telemetry(report, sender=sender, source="HTTP REST /api/telemetry")
+                body = b'{"success":true}'
+            except Exception as e:
+                body = json.dumps({"error": str(e)}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         else:
             self.send_error(404, "Not Found")
 
@@ -210,8 +231,19 @@ class TelemetryServer:
         self.last_detected_number = None
         self.last_call_time = 0
         self.last_call_number = None
+        self.telemetry_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_telemetry.json")
         self.latest_telemetry = None
         self.telemetry_count = 0
+        if os.path.exists(self.telemetry_file):
+            try:
+                with open(self.telemetry_file, "r") as f:
+                    saved = json.load(f)
+                    if saved and "content" in saved:
+                        self.latest_telemetry = saved
+                        self.telemetry_count = saved.get("update_count", 1)
+                        print(f"[{format_timestamp()}] 💾 Restored latest telemetry from disk (Update #{self.telemetry_count})")
+            except Exception:
+                pass
         self.processed_msg_ids = set()
         self.map_session_path = None
         self.pending_call_trigger = None
@@ -279,7 +311,7 @@ class TelemetryServer:
         print(f"\033[1;32m{clean_text}\033[0m", flush=True)
         print("=" * 65 + "\n", flush=True)
 
-        # Store latest telemetry in memory for newly connected clients
+        # Store latest telemetry in memory and persist to disk
         self.latest_telemetry = {
             "content": clean_text,
             "sender": sender,
@@ -287,6 +319,11 @@ class TelemetryServer:
             "timestamp": ts,
             "update_count": self.telemetry_count
         }
+        try:
+            with open(self.telemetry_file, "w") as f:
+                json.dump(self.latest_telemetry, f, indent=2)
+        except Exception:
+            pass
 
         # Broadcast to all connected WebSockets (phone apps + web dashboard)
         if self.loop and self.connected_clients:
@@ -778,7 +815,7 @@ class TelemetryServer:
             return True
 
         def populate_initial_history():
-            """Pre-populate existing message IDs so startup doesn't flood past SMS history."""
+            """Pre-populate existing message IDs and load latest alert if not already cached."""
             nonlocal mas_interface
             if not mas_interface:
                 return
@@ -790,13 +827,15 @@ class TelemetryServer:
                     msg_id = str(path)
                     self.processed_msg_ids.add(msg_id)
                     subj = str(meta.get('Subject', ''))
-                    if ('Rakshak' in subj or 'Sensors' in subj or 'Live Sensors' in subj or 'Pedometer' in subj) and latest_alert is None:
+                    sender = str(meta.get('SenderAddress', ''))
+                    if latest_alert is None and ('8714711540' in sender or 'Rakshak' in subj or subj.startswith('proto:')):
                         full_content = fetch_full_message(path)
-                        latest_alert = full_content if full_content else subj
-                        latest_sender = str(meta.get('SenderAddress', ''))
-                if latest_alert and self.telemetry_count == 0:
-                    self.display_telemetry(latest_alert, sender=latest_sender, source="Bluetooth BLE / MAP (Initial State)")
-            except Exception:
+                        if full_content and ('Rakshak' in full_content or 'Live Sensors' in full_content or 'Pedometer' in full_content):
+                            latest_alert = full_content
+                            latest_sender = sender or "+918714711540"
+                if latest_alert and (self.latest_telemetry is None or self.telemetry_count == 0):
+                    self.display_telemetry(latest_alert, sender=latest_sender, source="Bluetooth BLE / MAP (Inbox)")
+            except Exception as e:
                 pass
 
         if init_session():
@@ -882,8 +921,8 @@ class TelemetryServer:
 
     def run_adb_telemetry_listener(self):
         """
-        Direct cellular SMS telemetry ingestor via Phone A USB ADB connection.
-        Continuously polls content://sms/inbox on Phone A every 1.5 seconds.
+        Direct cellular SMS telemetry ingestor via Phone ADB connection.
+        Continuously polls content://sms every 1.5 seconds.
         Guarantees zero-latency, 100% reliable telemetry ingestion with zero D-Bus drops.
         """
         adb_seen_ids = set()
@@ -891,9 +930,16 @@ class TelemetryServer:
 
         while True:
             try:
-                cmd = ["adb", "shell", "content query --uri content://sms/inbox --where \"address LIKE '%8714711540%' OR body LIKE '%Rakshak%'\""]
+                dev_out = subprocess.run(["adb", "devices"], capture_output=True, text=True, timeout=2).stdout
+                target_cmd = ["adb"]
+                if "289e9952" in dev_out:
+                    target_cmd = ["adb", "-s", "289e9952"]
+                elif "0fdefe1e3cfa" in dev_out:
+                    target_cmd = ["adb", "-s", "0fdefe1e3cfa"]
+
+                cmd = target_cmd + ["shell", "content query --uri content://sms --where \"address LIKE '%8714711540%' OR body LIKE '%Rakshak%'\""]
                 res = subprocess.run(cmd, capture_output=True, text=True, timeout=4)
-                if res.returncode == 0 and res.stdout:
+                if res.returncode == 0 and res.stdout and "No result found" not in res.stdout:
                     rows = res.stdout.split("Row: ")
                     if not initialized:
                         latest_row = None
@@ -904,13 +950,13 @@ class TelemetryServer:
                                 adb_seen_ids.add(mid)
                                 if latest_row is None:
                                     latest_row = r
-                        if latest_row and self.telemetry_count == 0:
+                        if latest_row and (self.latest_telemetry is None or self.telemetry_count == 0):
                             body_m = re.search(r"body=(.+?)(?:, service_center=|, locked=|$)", latest_row, re.DOTALL)
                             addr_m = re.search(r"address=([^\s,]+)", latest_row)
                             if body_m:
                                 b_text = body_m.group(1).strip()
                                 s_addr = addr_m.group(1) if addr_m else "+918714711540"
-                                self.display_telemetry(b_text, sender=s_addr, source="Phone A (Cellular Telephony Ingest)")
+                                self.display_telemetry(b_text, sender=s_addr, source="Phone ADB Telephony Ingest")
                         initialized = True
                     else:
                         for r in rows[1:]:
@@ -926,7 +972,7 @@ class TelemetryServer:
                                     b_text = body_m.group(1).strip()
                                     if "Rakshak Alert" in b_text or "Live Sensors" in b_text or "Pedometer" in b_text:
                                         s_addr = addr_m.group(1) if addr_m else "+918714711540"
-                                        self.display_telemetry(b_text, sender=s_addr, source="Phone A (Cellular Telephony Ingest)")
+                                        self.display_telemetry(b_text, sender=s_addr, source="Phone ADB Telephony Ingest")
             except Exception:
                 pass
             time.sleep(1.5)
