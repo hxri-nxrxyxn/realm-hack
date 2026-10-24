@@ -6,8 +6,8 @@ Records and processes 10-second audio segments ONLY DURING AN ACTIVE CALL on Red
 
 Workflow:
 1. Dormant / Idle when no call is active.
-2. Triggers immediately when an incoming or connected call is detected on Redmi Note 10.
-3. Records 10s audio chunk via ffmpeg from the Bluetooth call stream (or PulseAudio default).
+2. Triggers ONLY when an active call is verified on Redmi Note 10 via D-Bus / PipeWire.
+3. Records 10s audio chunk via ffmpeg from the Bluetooth call stream.
 4. Dispatches to n8n AI webhook:
    curl -X POST http://192.168.2.69:5678/webhook-test/passive -F "data=@record.mp3"
    (Falls back to /webhook/passive if test mode is inactive).
@@ -15,7 +15,7 @@ Workflow:
    - If MP3 binary: plays directly.
    - If JSON text: synthesizes neural Malayalam speech (ml-IN-SobhanaNeural) and plays.
 6. Plays audio back to BOTH laptop speakers and Bluetooth phone call output.
-7. Stops recording immediately when the call ends.
+7. Strictly stops recording immediately when the call ends. No background queue or repeated loops.
 """
 
 import os
@@ -38,7 +38,7 @@ def format_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def is_call_active():
-    """Checks if a call is actively connected on Redmi Note 10 (via D-Bus or Bluetooth audio stream)."""
+    """Checks strictly if a phone call is currently active on Redmi Note 10 via PipeWire / oFono."""
     # Check 1: D-Bus oFono VoiceCallManager on PipeWire Telephony
     try:
         bus = dbus.SessionBus()
@@ -50,14 +50,14 @@ def is_call_active():
     except Exception:
         pass
 
-    # Check 2: Active bluez audio input source in pactl
+    # Check 2: Active bluez call audio input source in pactl
     try:
         res = subprocess.run(["pactl", "list", "sources", "short"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         for line in res.stdout.strip().splitlines():
             parts = line.split()
             if len(parts) >= 2:
                 name = parts[1]
-                if "bluez" in name and "monitor" not in name:
+                if "bluez_input" in name:
                     return True
     except Exception:
         pass
@@ -131,7 +131,7 @@ class AudioConversationBridge:
         self.thread = None
         self.record_proc = None
         self.chunk_count = 0
-        self.last_status = "idle (waiting for call)"
+        self.last_status = "idle (no active call)"
         self.last_transcript = ""
         self.last_ai_reply = ""
         self.last_chunk_time = None
@@ -144,7 +144,7 @@ class AudioConversationBridge:
                     "type": "AUDIO_BRIDGE_LOG",
                     "status": self.last_status,
                     "chunk": self.chunk_count,
-                    "call_active": self.call_in_progress,
+                    "call_active": is_call_active(),
                     "last_reply": self.last_ai_reply,
                     "timestamp": format_timestamp()
                 })
@@ -155,12 +155,12 @@ class AudioConversationBridge:
         """Called by server when a call on Redmi Note 10 starts."""
         self.call_in_progress = True
         self.log("📞 Call started on Redmi Note 10 -> Starting 10s audio AI recording loop.")
-        self.start()
+        self.start(force=True)
 
     def notify_call_ended(self):
         """Called by server when a call on Redmi Note 10 ends."""
         self.call_in_progress = False
-        self.log("📴 Call ended on Redmi Note 10 -> Stopping audio recording.")
+        self.log("📴 Call ended on Redmi Note 10 -> Stopping audio recording immediately.")
         self.stop()
 
     def record_chunk(self, duration=10, output_path=TEMP_RECORD_PATH):
@@ -265,51 +265,70 @@ class AudioConversationBridge:
         except Exception as e:
             self.log(f"⚠️ Response parsing note: {e}")
 
-    def loop(self):
-        self.log("🎙️ Call audio monitor active: waiting for active call on Redmi Note 10...")
+    def loop(self, force=False):
+        self.log("🎙️ Call audio monitor active: strictly checking for active call on Redmi Note 10...")
         while self.is_running:
-            # Check if call is actually in progress
-            if not self.call_in_progress and not is_call_active():
-                self.last_status = "idle (waiting for call)"
-                time.sleep(0.5)
-                continue
+            # Strictly verify that an active call exists on Redmi Note 10
+            active = is_call_active() or (force and self.chunk_count == 0)
+            if not active:
+                self.is_running = False
+                self.call_in_progress = False
+                self.last_status = "idle (no active call on Redmi Note 10)"
+                self.log("📴 No active call on Redmi Note 10. Audio loop stopped immediately.")
+                break
 
             self.chunk_count += 1
             self.last_chunk_time = format_timestamp()
             self.log(f"\n📞 [Active Call on Redmi Note 10 - Chunk #{self.chunk_count}] Recording 10s audio...")
             
             ok = self.record_chunk(duration=10)
-            if not self.is_running:
+            if not self.is_running or not is_call_active():
+                self.is_running = False
+                self.call_in_progress = False
+                self.log("📴 Call ended during recording. Discarding chunk and stopping.")
                 break
+
             if not ok:
                 time.sleep(0.5)
                 continue
 
             self.log("🚀 Dispatched 10s MP3 to AI Webhook (http://192.168.2.69:5678/webhook-test/passive)...")
             resp = self.send_to_webhook()
-            if not self.is_running:
+            if not self.is_running or not is_call_active():
+                self.is_running = False
+                self.call_in_progress = False
+                self.log("📴 Call ended. Stopping loop.")
                 break
+
             if resp:
                 self.process_response(resp)
             else:
                 self.log("⚠️ No response from n8n webhook.")
 
-            # Pause briefly between chunks, checking if call is still active
-            if not is_call_active() and not self.call_in_progress:
-                self.log("📴 Call ended on Redmi Note 10. Pausing recording.")
-                self.last_status = "idle (call ended)"
-                time.sleep(0.5)
+            # Pause briefly and re-verify before next chunk
+            if not is_call_active():
+                self.is_running = False
+                self.call_in_progress = False
+                self.log("📴 Call ended on Redmi Note 10. Stopping audio bridge.")
+                break
 
-    def start(self):
+            time.sleep(0.5)
+
+    def start(self, force=False):
         if self.is_running:
             return
+        if not force and not is_call_active():
+            self.log("ℹ️ No active call detected on Redmi Note 10. Audio bridge staying in standby.")
+            self.last_status = "idle (no active call on Redmi Note 10)"
+            return
         self.is_running = True
-        self.thread = threading.Thread(target=self.loop, daemon=True)
+        self.thread = threading.Thread(target=self.loop, args=(force,), daemon=True)
         self.thread.start()
 
     def stop(self):
         self.is_running = False
-        self.last_status = "idle (waiting for call)"
+        self.call_in_progress = False
+        self.last_status = "idle (no active call on Redmi Note 10)"
         if self.record_proc:
             try:
                 self.record_proc.kill()
@@ -323,7 +342,7 @@ if __name__ == "__main__":
     print("=" * 65)
     print(" RakshaNet Call-Activated Audio AI Conversation Bridge")
     print("=================================================================")
-    print(" Active: ONLY DURING PHONE CALLS on Redmi Note 10")
+    print(" Active: STRICTLY ONLY DURING ACTIVE PHONE CALLS on Redmi Note 10")
     print(" Target: http://192.168.2.69:5678/webhook-test/passive")
     print(" Press Ctrl+C to stop.")
     print("=" * 65)

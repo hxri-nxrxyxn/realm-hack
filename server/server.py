@@ -365,7 +365,7 @@ class TelemetryServer:
                     pass
 
             # Strategy 2: VoiceCallManager.ReleaseAndAnswer / HoldAndAnswer
-            if not answered:
+            if not answered and raw_path:
                 try:
                     telephony = bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
                     for iface in ["org.ofono.VoiceCallManager", "org.pipewire.Telephony.AudioGateway1"]:
@@ -380,8 +380,11 @@ class TelemetryServer:
                 except Exception:
                     pass
 
-            print(f"[{format_timestamp()}] 🎙️ Call connected on Redmi Note 10! Activating Real-Time AI Audio Conversation Bridge...")
-            self.audio_bridge.notify_call_started()
+            if answered or raw_path:
+                print(f"[{format_timestamp()}] 🎙️ Real call connected on Redmi Note 10! Activating Real-Time AI Audio Conversation Bridge...")
+                self.audio_bridge.notify_call_started()
+            else:
+                print(f"[{format_timestamp()}] ℹ️ Simulated call test (no hardware call). Audio bridge remains in standby.")
 
         threading.Thread(target=_answer, daemon=True).start()
 
