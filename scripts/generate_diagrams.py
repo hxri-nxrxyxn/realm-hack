@@ -4,7 +4,7 @@ Mermaid Diagram Generator for realm-hack Monorepo.
 Generates structured sequence diagrams for interactions between:
 - Client (App): Hardware Sensors, Incident Detection, Default SMS Role
 - Gateway (App): Bluetooth Call Auto-Responder, Quick Dialer
-- Server: Python Telephony WebSocket Server, Express Backend, Speech Microservices
+- Server: Python Telephony WebSocket Server, Audio Bridge, Express Backend, Speech Microservices
 """
 
 def generate_telephony_sequence() -> str:
@@ -87,10 +87,44 @@ sequenceDiagram
     end
 ```"""
 
+def generate_voice_ai_conversation_sequence() -> str:
+    """Sequence diagram for live bidirectional Malayalam Voice AI conversation loop."""
+    return """```mermaid
+sequenceDiagram
+    autonumber
+    actor Caller as 📞 Caller (Redmi Note 10)
+    participant PW as 🎧 PipeWire / PulseAudio (HFP Audio)
+    participant Bridge as 🎙️ audio_bridge.py
+    participant N8N as ⚡ n8n Webhook Workflow
+    participant Thennal as 🗣️ Thennal Whisper ASR
+    participant Ollama as 🧠 Ollama (Gemma LLM)
+    participant Meera as 🔊 Piper TTS (Meera Model)
+
+    Caller->>PW: Speaks in Malayalam over active Bluetooth phone call
+    PW->>Bridge: Routes call audio to call_record null-sink
+    Note over Bridge: Records 10s audio segment & encodes to MP3 via ffmpeg
+    Bridge->>N8N: POST /webhook/passive (record.mp3)
+
+    rect rgb(20, 30, 40)
+        Note over N8N: Voice AI Conversation Pipeline
+        N8N->>Thennal: Pass audio chunk for speech transcription
+        Thennal-->>N8N: Extracted Malayalam text (Thennal fine-tuned Whisper)
+        N8N->>Ollama: Prompt with transcript, emergency telemetry & intent
+        Ollama-->>N8N: Generated Malayalam conversational response (Gemma)
+        N8N->>Meera: Synthesize response text into speech (ml_IN-meera-medium.onnx)
+        Meera-->>N8N: High-quality neural Malayalam audio reply
+    end
+
+    N8N-->>Bridge: Returns generated Malayalam audio response (.mp3/.wav)
+    Bridge->>PW: Injects audio into call_playback sink & BlueZ mic uplink
+    PW-->>Caller: Plays synthesized AI voice directly into phone earpiece
+    Note over Caller,Bridge: Conversation continues iteratively for duration of active call
+```"""
+
 def build_readme_diagrams_section() -> str:
     return f"""## System Sequence Diagrams
 
-The interactions between **Client (App)**, **Gateway (App)**, and **Server** are coordinated via cellular SMS, local WebSockets, D-Bus IPC, and HTTP REST APIs.
+The interactions between **Client (App)**, **Gateway (App)**, and **Server** are coordinated via cellular SMS, local WebSockets, D-Bus IPC, PipeWire audio routing, and HTTP REST APIs.
 
 ### 1. Hands-Free Telephony & Auto-Responder (`server.py` & Gateway)
 When an incoming call is picked up via Bluetooth hands-free audio, the Python telephony server extracts caller metadata over Linux D-Bus and coordinates with the Gateway app over WebSockets for automatic SMS response.
@@ -110,6 +144,13 @@ When kinematics detect an emergency or fall anomaly, the Client app executes mul
 When an incoming emergency trigger is received on an Android device running the Client app with the Default SMS role, it intercepts the message at highest priority, bypasses lockscreens, and sounds vibration alarms.
 
 {generate_default_sms_sequence()}
+
+---
+
+### 4. Bidirectional Malayalam Voice AI Conversation Loop (`audio_bridge.py` & n8n)
+During an active Bluetooth call, the audio bridge records 10s segments and routes them through a complete edge AI pipeline—transcribing via Thennal Whisper, reasoning via Gemma on Ollama, synthesizing fluent Malayalam speech via Piper TTS (Meera model), and streaming the reply directly into the phone call uplink.
+
+{generate_voice_ai_conversation_sequence()}
 """
 
 def update_readme(readme_path: str = "README.md") -> None:
@@ -122,7 +163,6 @@ def update_readme(readme_path: str = "README.md") -> None:
     if section_header in content:
         # Replace existing section
         parts = content.split(section_header)
-        # Find next section or end
         after = parts[1]
         next_section_idx = after.find("\n## ")
         if next_section_idx != -1:

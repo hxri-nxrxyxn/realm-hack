@@ -8,7 +8,8 @@
 
 * **Client App (`client/`)** — Personal device application monitoring 5 hardware sensors (accelerometer, gyroscope, magnetometer, ambient light, pedometer). It evaluates kinematic thresholds to detect incidents/falls, packages live telemetry into emergency SMS broadcasts, and acts as a designated Android Default SMS Handler to execute full-screen wake locks, lockscreen dismissal, and continuous vibration alarms upon authorized triggers.
 * **Gateway App (`gateway/`)** — Mobile base-station client that links with local telephony listeners via WebSockets. It detects incoming calls over Bluetooth hands-free profiles (HFP) in real time and automatically dispatches immediate SMS alerts to callers without requiring manual device interaction.
-* **Server & Services (`server/`)** — Edge infrastructure hosting real-time telemetry ingestion and WebSocket distribution (`server/backend`), PipeWire/oFono telephony D-Bus monitors (`server/server.py`), localized Malayalam Piper TTS (`server/services/malayalam-tts`), Malayalam voice ASR (`server/services/malayalam-voice-asr`), and n8n workflow automation (`server/services/n8n`).
+* **Server & Services (`server/`)** — Edge infrastructure hosting real-time telemetry ingestion and WebSocket distribution (`server/backend`), PipeWire/oFono telephony D-Bus monitors (`server/server.py`), live bidirectional call audio bridge (`server/audio_bridge.py`), localized Malayalam Piper TTS (`server/services/malayalam-tts`), Malayalam voice ASR (`server/services/malayalam-voice-asr`), n8n workflow automation (`server/services/n8n`), and incident dashboard (`server/dashboard.html`).
+* **Bidirectional Voice AI Loop** — Captures active Bluetooth phone call audio, transcribes Malayalam speech using the fine-tuned **Thennal Whisper** model, generates context-aware responses with **Gemma** via **Ollama**, synthesizes fluent speech using the **Meera ONNX** voice on **Piper TTS**, and injects audio back into the call uplink so callers converse with a local AI assistant in real time.
 
 ---
 
@@ -21,10 +22,12 @@ realm-hack/
 └── server/
     ├── backend/                # Telemetry ingestion & WebSocket streaming server
     ├── services/
-    │   ├── malayalam-tts/      # Malayalam Piper Text-to-Speech container
-    │   ├── malayalam-voice-asr/# Malayalam Speech Recognition model service
+    │   ├── malayalam-tts/      # Malayalam Piper Text-to-Speech container (Meera model)
+    │   ├── malayalam-voice-asr/# Malayalam Speech Recognition service (Thennal Whisper model)
     │   └── n8n/                # n8n event orchestration workflows
+    ├── audio_bridge.py         # Real-time Bluetooth call audio recording & AI playback bridge
     ├── server.py               # PipeWire Bluetooth call monitor & WebSocket server
+    ├── dashboard.html          # Real-time incident & telemetry web dashboard
     └── extract_call_number.py  # D-Bus telephony inspection CLI
 ```
 
@@ -32,7 +35,7 @@ realm-hack/
 
 ## System Sequence Diagrams
 
-The interactions between **Client (App)**, **Gateway (App)**, and **Server** are coordinated via cellular SMS, local WebSockets, D-Bus IPC, and HTTP REST APIs.
+The interactions between **Client (App)**, **Gateway (App)**, and **Server** are coordinated via cellular SMS, local WebSockets, D-Bus IPC, PipeWire audio routing, and HTTP REST APIs.
 
 ### 1. Hands-Free Telephony & Auto-Responder (`server.py` & Gateway)
 When an incoming call is picked up via Bluetooth hands-free audio, the Python telephony server extracts caller metadata over Linux D-Bus and coordinates with the Gateway app over WebSockets for automatic SMS response.
@@ -122,6 +125,41 @@ sequenceDiagram
 ```
 
 ---
+
+### 4. Bidirectional Malayalam Voice AI Conversation Loop (`audio_bridge.py` & n8n)
+During an active Bluetooth call, the audio bridge records 10s segments and routes them through a complete edge AI pipeline—transcribing via Thennal Whisper, reasoning via Gemma on Ollama, synthesizing fluent Malayalam speech via Piper TTS (Meera model), and streaming the reply directly into the phone call uplink.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Caller as 📞 Caller (Redmi Note 10)
+    participant PW as 🎧 PipeWire / PulseAudio (HFP Audio)
+    participant Bridge as 🎙️ audio_bridge.py
+    participant N8N as ⚡ n8n Webhook Workflow
+    participant Thennal as 🗣️ Thennal Whisper ASR
+    participant Ollama as 🧠 Ollama (Gemma LLM)
+    participant Meera as 🔊 Piper TTS (Meera Model)
+
+    Caller->>PW: Speaks in Malayalam over active Bluetooth phone call
+    PW->>Bridge: Routes call audio to call_record null-sink
+    Note over Bridge: Records 10s audio segment & encodes to MP3 via ffmpeg
+    Bridge->>N8N: POST /webhook/passive (record.mp3)
+
+    rect rgb(20, 30, 40)
+        Note over N8N: Voice AI Conversation Pipeline
+        N8N->>Thennal: Pass audio chunk for speech transcription
+        Thennal-->>N8N: Extracted Malayalam text (Thennal fine-tuned Whisper)
+        N8N->>Ollama: Prompt with transcript, emergency telemetry & intent
+        Ollama-->>N8N: Generated Malayalam conversational response (Gemma)
+        N8N->>Meera: Synthesize response text into speech (ml_IN-meera-medium.onnx)
+        Meera-->>N8N: High-quality neural Malayalam audio reply
+    end
+
+    N8N-->>Bridge: Returns generated Malayalam audio response (.mp3/.wav)
+    Bridge->>PW: Injects audio into call_playback sink & BlueZ mic uplink
+    PW-->>Caller: Plays synthesized AI voice directly into phone earpiece
+    Note over Caller,Bridge: Conversation continues iteratively for duration of active call
+```
 
 ## Quick Start
 
