@@ -6,10 +6,13 @@
 	import MagnetometerCard from "#lib/components/MagnetometerCard.svelte";
 	import PedometerCard from "#lib/components/PedometerCard.svelte";
 	import AmbientLightCard from "#lib/components/AmbientLightCard.svelte";
+	import TelemetryBeaconCard from "#lib/components/TelemetryBeaconCard.svelte";
 	import SmsSenderCard from "#lib/components/SmsSenderCard.svelte";
 	import logo from "#lib/assets/logo.png";
 
 	import { sensorManager } from "#lib/services/sensorManager.svelte.js";
+	import { defaultSmsManager } from "#lib/services/defaultSmsService.svelte.js";
+	import { telemetryBeacon } from "#lib/services/telemetryBeaconService.svelte.js";
 	import {
 		Play,
 		Square,
@@ -20,10 +23,12 @@
 		Zap,
 		SunMedium,
 		Sliders,
-		MessageSquare
+		MessageSquare,
+		Radio
 	} from "lucide-svelte";
 
 	onMount(async () => {
+		await defaultSmsManager.initialize();
 		await sensorManager.initialize();
 		await sensorManager.start();
 	});
@@ -68,6 +73,9 @@
 
 	<!-- Main Body Content (Scrollable) -->
 	<main class="mx-auto w-full max-w-5xl flex-1 px-3.5 sm:px-4 pt-4 sm:pt-6 space-y-5 pb-20 sm:pb-24">
+		<!-- Emergency Telemetry Beacon (High Priority at Top) -->
+		<TelemetryBeaconCard />
+
 		<!-- Android Activity Permission Notice if needed -->
 		{#if sensorManager.isNative && !sensorManager.status.hasActivityRecognitionPermission}
 			<Alert.Root class="border-emerald-600/40 bg-emerald-950/40 text-emerald-200 rounded-2xl">

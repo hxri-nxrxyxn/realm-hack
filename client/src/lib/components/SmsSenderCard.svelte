@@ -61,18 +61,20 @@
 		}
 
 		// Also send directly over WebSocket to server if reachable
-		try {
-			const ws = new WebSocket("ws://192.168.2.38:8765");
-			ws.onopen = () => {
-				ws.send(JSON.stringify({
-					type: "CLIENT_TELEMETRY",
-					report: finalMessage,
-					sender: "Phone B (Client)"
-				}));
-				setTimeout(() => ws.close(), 1500);
-			};
-		} catch (e) {
-			// Ignore offline
+		for (const host of ["192.168.2.7", "192.168.2.38"]) {
+			try {
+				const ws = new WebSocket(`ws://${host}:8765`);
+				ws.onopen = () => {
+					ws.send(JSON.stringify({
+						type: "CLIENT_TELEMETRY",
+						report: finalMessage,
+						sender: "Phone B (Client)"
+					}));
+					setTimeout(() => ws.close(), 1500);
+				};
+			} catch (e) {
+				// Ignore offline
+			}
 		}
 
 		const result = await sendSms(phoneNumber, finalMessage);

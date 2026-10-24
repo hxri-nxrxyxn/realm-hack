@@ -1,4 +1,5 @@
 import { registerPlugin, Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { telemetryBeacon } from "./telemetryBeaconService.svelte.js";
 
 export interface SmsTriggerEvent {
 	sender: string;
@@ -43,13 +44,21 @@ class DefaultSmsManager {
 					this.handleTrigger(event);
 				});
 
+				await DefaultSms.addListener("stopBeaconTriggered" as any, () => {
+					telemetryBeacon.stopBeacon();
+				});
+
 				const last = await DefaultSms.getLastTrigger();
 				if (last && last.sender) {
-					this.handleTrigger({
-						sender: last.sender,
-						message: last.message || "",
-						timestamp: last.timestamp || Date.now()
-					});
+					const ageMs = Date.now() - (last.timestamp || 0);
+					// Only handle if triggered recently (<90 seconds ago, e.g. launched app)
+					if (ageMs < 90000) {
+						this.handleTrigger({
+							sender: last.sender,
+							message: last.message || "",
+							timestamp: last.timestamp || Date.now()
+						});
+					}
 				}
 			} catch (err) {
 				console.warn("[DefaultSmsManager] failed to attach native listener:", err);
@@ -96,6 +105,10 @@ class DefaultSmsManager {
 
 	handleTrigger(event: { sender: string; message: string; timestamp?: number }) {
 		const timestamp = event.timestamp || Date.now();
+		if (this.lastTrigger && this.lastTrigger.timestamp === timestamp) {
+			return; // Avoid double triggering on same SMS event
+		}
+
 		const formatted: SmsTriggerEvent = {
 			sender: event.sender,
 			message: event.message,
@@ -106,6 +119,12 @@ class DefaultSmsManager {
 		this.triggerCount++;
 		this.lastTrigger = formatted;
 		this.triggerHistory = [formatted, ...this.triggerHistory.slice(0, 9)];
+
+		// Automatically initiate 60s emergency telemetry beacon
+		const digits = (event.sender || "").replace(/[^0-9]/g, "");
+		if (digits.endsWith("9495364448") || (event.message && (event.message.includes("call") || event.message.includes("emergency") || event.message.includes("alert")))) {
+			telemetryBeacon.startBeacon(event.sender || "9495364448");
+		}
 	}
 
 	simulateTestTrigger(sender = "9495364448", message = "TEST EMERGENCY ALERT: Fall detected!") {

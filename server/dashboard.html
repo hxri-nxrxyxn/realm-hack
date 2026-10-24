@@ -261,6 +261,15 @@
       color: var(--text-mid);
     }
 
+    @keyframes flashTile {
+      0% { border-color: #ffffff; background: #1a1a1a; }
+      100% { border-color: var(--border-dim); background: var(--bg-box); }
+    }
+
+    .tile-flash {
+      animation: flashTile 0.7s ease-out;
+    }
+
     /* Minimalist Technical Compass */
     .compass-display {
       display: flex;
@@ -378,10 +387,15 @@
   <!-- Emergency Alert Priority Section -->
   <section class="panel" id="alert-panel">
     <div class="panel-label-row">
-      <span class="panel-label">// emergency alert payload</span>
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <span class="panel-meta" id="alert-source-meta">source: [waiting for incoming alert]</span>
+      <div style="display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap;">
+        <span class="panel-label">// emergency alert payload</span>
+        <span class="status-tag" id="beacon-loop-tag">beacon: [standby]</span>
+        <span class="panel-meta" id="alert-count-meta">updates: [0]</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <span class="panel-meta" id="alert-source-meta">source: [waiting for alert]</span>
         <span class="panel-meta" id="alert-time-meta"></span>
+        <span class="panel-meta" id="alert-age-meta" style="color: var(--text-bright); font-weight: 500;"></span>
         <button type="button" class="action-btn" onclick="copyAlertText()">[copy payload]</button>
       </div>
     </div>
@@ -522,6 +536,8 @@ awaiting emergency trigger from client or gateway...</div>
   let ws = null;
   let audioAlarmEnabled = true;
   let audioCtx = null;
+  let telemetryUpdateCount = 0;
+  let lastTelemetryTimestamp = null;
 
   function initAudio() {
     if (!audioCtx) {
@@ -599,7 +615,7 @@ awaiting emergency trigger from client or gateway...</div>
       const content = msg.content || '';
       const source = msg.source || 'bluetooth ble / map';
       const sender = msg.sender || '';
-      updateTelemetryDisplay(content, sender ? `${sender} via ${source}` : source);
+      updateTelemetryDisplay(content, sender ? `${sender} via ${source}` : source, msg.update_count);
       playBeep(920, 0.25);
     } else if (msg.type === 'CALL_DETECTED') {
       document.getElementById('last-call-num').textContent = msg.number;
@@ -609,23 +625,44 @@ awaiting emergency trigger from client or gateway...</div>
       if (msg.last_number) {
         document.getElementById('last-call-num').textContent = msg.last_number;
       }
+      if (msg.telemetry_count) {
+        telemetryUpdateCount = msg.telemetry_count;
+        document.getElementById('alert-count-meta').textContent = 'updates: [' + telemetryUpdateCount + ']';
+      }
       if (msg.latest_telemetry && msg.latest_telemetry.content) {
         const t = msg.latest_telemetry;
-        updateTelemetryDisplay(t.content, t.sender ? `${t.sender} via ${t.source}` : t.source);
+        updateTelemetryDisplay(t.content, t.sender ? `${t.sender} via ${t.source}` : t.source, t.update_count || telemetryUpdateCount);
       }
     }
   }
 
-  function updateTelemetryDisplay(text, source = 'bluetooth ble / map') {
+  function updateTelemetryDisplay(text, source = 'bluetooth ble / map', count = null) {
     const rawBox = document.getElementById('raw-telemetry-box');
     rawBox.textContent = text.trim();
 
     const panel = document.getElementById('alert-panel');
     panel.classList.add('alert-active');
 
+    if (count !== null && count !== undefined) {
+      telemetryUpdateCount = count;
+    } else {
+      telemetryUpdateCount++;
+    }
+    lastTelemetryTimestamp = Date.now();
+
+    document.getElementById('alert-count-meta').textContent = `updates: [${telemetryUpdateCount}]`;
     document.getElementById('alert-source-meta').textContent = `source: [${source}]`;
     const now = new Date();
     document.getElementById('alert-time-meta').textContent = `time: [${now.toLocaleTimeString()}]`;
+    document.getElementById('alert-age-meta').textContent = `[just now]`;
+
+    // Trigger visual pulse on all sensor tiles
+    const tiles = document.querySelectorAll('.sensor-tile');
+    tiles.forEach(tile => {
+      tile.classList.remove('tile-flash');
+      void tile.offsetWidth; // force reflow
+      tile.classList.add('tile-flash');
+    });
 
     // Parse sensors
     const pMatch = text.match(/Pedometer:\s*(\d+)\s*steps\s*\(([\d\.]+)\s*km\)/i);
@@ -660,7 +697,24 @@ awaiting emergency trigger from client or gateway...</div>
       document.getElementById('compass-needle').style.transform = `rotate(${heading}deg)`;
     }
 
-    addFeedItem(`telemetry payload received from ${source}`, true);
+    addFeedItem(`telemetry update #${telemetryUpdateCount} received from ${source}`, true);
+  }
+
+  function tickTelemetryTimer() {
+    if (!lastTelemetryTimestamp) return;
+    const elapsed = Math.floor((Date.now() - lastTelemetryTimestamp) / 1000);
+    const ageElem = document.getElementById('alert-age-meta');
+    const beaconTag = document.getElementById('beacon-loop-tag');
+
+    ageElem.textContent = `[${elapsed}s ago]`;
+
+    if (elapsed <= 75) {
+      beaconTag.className = 'status-tag active';
+      beaconTag.textContent = 'beacon: [60s live loop active]';
+    } else {
+      beaconTag.className = 'status-tag warn';
+      beaconTag.textContent = `beacon: [waiting >${elapsed}s]`;
+    }
   }
 
   function addFeedItem(text, isAlert = false) {
@@ -726,6 +780,7 @@ awaiting emergency trigger from client or gateway...</div>
   window.addEventListener('load', () => {
     connectWebSocket();
     setInterval(updateServerStatus, 2000);
+    setInterval(tickTelemetryTimer, 1000);
     updateServerStatus();
   });
 </script>

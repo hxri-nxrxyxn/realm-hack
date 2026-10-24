@@ -106,6 +106,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "gateway_online": len(phone_clients) > 0,
                 "gateway_ips": phone_clients,
                 "last_call_number": self.server_instance.last_detected_number or "9995283835",
+                "telemetry_count": self.server_instance.telemetry_count,
                 "timestamp": format_timestamp()
             }
             body = json.dumps(status_data).encode("utf-8")
@@ -163,6 +164,7 @@ class TelemetryServer:
         self.last_call_time = 0
         self.last_call_number = None
         self.latest_telemetry = None
+        self.telemetry_count = 0
         self.processed_msg_ids = set()
         self.map_session_path = None
         self.pending_call_trigger = None
@@ -193,11 +195,12 @@ class TelemetryServer:
             clean_text
         )
 
+        self.telemetry_count += 1
         ts = format_timestamp()
         source_label = f"{sender} ({source})" if sender else source
 
         print("\n" + "=" * 65, flush=True)
-        print(f"\033[1;31m[{ts}] 🚨 RAKSHAK SENSOR TELEMETRY RECEIVED\033[0m", flush=True)
+        print(f"\033[1;31m[{ts}] 🚨 RAKSHAK SENSOR TELEMETRY RECEIVED (Update #{self.telemetry_count})\033[0m", flush=True)
         print(f"\033[1;36m  Channel Source  : \033[0m{source_label}", flush=True)
         print("=" * 65, flush=True)
         print(f"\033[1;32m{clean_text}\033[0m", flush=True)
@@ -208,7 +211,8 @@ class TelemetryServer:
             "content": clean_text,
             "sender": sender,
             "source": source,
-            "timestamp": ts
+            "timestamp": ts,
+            "update_count": self.telemetry_count
         }
 
         # Broadcast to all connected WebSockets (phone apps + web dashboard)
@@ -218,7 +222,8 @@ class TelemetryServer:
                 "content": clean_text,
                 "sender": sender,
                 "source": source,
-                "timestamp": ts
+                "timestamp": ts,
+                "update_count": self.telemetry_count
             }
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
 
@@ -298,6 +303,7 @@ class TelemetryServer:
             "port": self.port,
             "http_port": self.http_port,
             "last_number": self.last_detected_number or "9995283835",
+            "telemetry_count": self.telemetry_count,
             "latest_telemetry": self.latest_telemetry,
             "timestamp": format_timestamp()
         }

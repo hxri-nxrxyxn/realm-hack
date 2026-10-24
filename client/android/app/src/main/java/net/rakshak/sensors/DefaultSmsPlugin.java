@@ -45,6 +45,12 @@ public class DefaultSmsPlugin extends Plugin {
         }
     }
 
+    public static void triggerStopBeacon() {
+        if (instance != null) {
+            instance.notifyListeners("stopBeaconTriggered", new JSObject());
+        }
+    }
+
     @PluginMethod
     public void getLastTrigger(PluginCall call) {
         if (lastTrigger != null) {

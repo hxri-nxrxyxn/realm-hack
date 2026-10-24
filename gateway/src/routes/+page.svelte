@@ -9,7 +9,7 @@
   const DirectSms = registerPlugin<DirectSmsPlugin>('DirectSms');
 
   const defaultPlaceholder = '9995283835';
-  const defaultServerUrl = 'ws://192.168.2.38:8765';
+  const defaultServerUrl = 'ws://192.168.2.7:8765';
   const defaultMessage = 'received call. will get back to you shortly.';
 
   let phoneNumber = $state('');
@@ -210,7 +210,7 @@
             id="ws-input"
             type="text"
             bind:value={serverUrl}
-            placeholder="ws://192.168.2.38:8765"
+            placeholder="ws://192.168.2.7:8765"
             class="config-input"
           />
           <button type="submit" class="config-submit-btn">

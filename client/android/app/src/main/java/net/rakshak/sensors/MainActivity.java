@@ -68,7 +68,13 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void processIntent(Intent intent) {
-        if (intent != null && intent.hasExtra("sms_sender")) {
+        if (intent == null) return;
+        if ("net.rakshak.sensors.STOP_BEACON".equals(intent.getAction())) {
+            Log.d(TAG, "STOP_BEACON intent received in MainActivity");
+            DefaultSmsPlugin.triggerStopBeacon();
+            return;
+        }
+        if (intent.hasExtra("sms_sender")) {
             String sender = intent.getStringExtra("sms_sender");
             String message = intent.getStringExtra("sms_message");
             Log.d(TAG, "Processing SMS intent in MainActivity: " + sender + " -> " + message);
