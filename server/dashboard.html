@@ -473,6 +473,38 @@ awaiting emergency trigger from client or gateway...</div>
     </div>
   </section>
 
+  <!-- Real-Time AI Audio Conversation Bridge (10s Audio Loop) -->
+  <section class="panel" id="audio-bridge-panel">
+    <div class="panel-label-row">
+      <div style="display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap;">
+        <span class="panel-label">// real-time ai voice conversation</span>
+        <span class="status-tag" id="audio-bridge-tag">bridge: [standby]</span>
+        <span class="panel-meta" id="audio-chunks-meta">chunks: [0]</span>
+        <span class="status-tag active" id="call-mode-tag">mode: [auto-answer]</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <span class="panel-meta" id="audio-status-meta">status: [idle]</span>
+        <button type="button" class="action-btn solid" id="audio-toggle-btn" onclick="toggleAudioBridge()">[start ai audio loop]</button>
+        <button type="button" class="action-btn" id="call-mode-btn" onclick="toggleCallMode()">[switch to 1-ring mode]</button>
+      </div>
+    </div>
+
+    <div class="key-value-list" style="margin-bottom: 0.25rem;">
+      <div class="kv-item">
+        <span class="kv-key">webhook target</span>
+        <span class="kv-val">http://192.168.2.69:5678/webhook-test/passive</span>
+      </div>
+      <div class="kv-item">
+        <span class="kv-key">pipeline</span>
+        <span class="kv-val">10s chunk &bull; ffmpeg mp3 &bull; multipart post &bull; laptop &amp; caller playback</span>
+      </div>
+      <div class="kv-item">
+        <span class="kv-key">latest ai voice reply</span>
+        <span class="kv-val" id="latest-ai-reply" style="color: #6ee7b7; font-weight: 500;">none yet</span>
+      </div>
+    </div>
+  </section>
+
   <!-- Lower Section: Controls & Telephony + Stream -->
   <div class="grid-2col">
     <!-- Telephony & Actions -->
@@ -741,6 +773,68 @@ awaiting emergency trigger from client or gateway...</div>
     });
   }
 
+  async function toggleAudioBridge() {
+    try {
+      const res = await fetch('/api/audio-bridge/toggle', { method: 'POST' });
+      const data = await res.json();
+      updateAudioBridgeUI({ running: data.running });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function toggleCallMode() {
+    try {
+      const res = await fetch('/api/audio-bridge/mode', { method: 'POST' });
+      const data = await res.json();
+      updateCallModeUI(data.auto_answer_mode);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function updateAudioBridgeUI(info) {
+    if (!info) return;
+    const tag = document.getElementById('audio-bridge-tag');
+    const btn = document.getElementById('audio-toggle-btn');
+    const statusMeta = document.getElementById('audio-status-meta');
+    const chunksMeta = document.getElementById('audio-chunks-meta');
+    const replyMeta = document.getElementById('latest-ai-reply');
+
+    if (info.running) {
+      tag.className = 'status-tag active';
+      tag.textContent = 'bridge: [active]';
+      btn.textContent = '[stop ai audio loop]';
+    } else {
+      tag.className = 'status-tag';
+      tag.textContent = 'bridge: [standby]';
+      btn.textContent = '[start ai audio loop]';
+    }
+    if (info.chunk_count !== undefined) {
+      chunksMeta.textContent = `chunks: [${info.chunk_count}]`;
+    }
+    if (info.last_status) {
+      statusMeta.textContent = `status: [${info.last_status}]`;
+    }
+    if (info.last_reply) {
+      replyMeta.textContent = info.last_reply;
+    }
+  }
+
+  function updateCallModeUI(isAutoAnswer) {
+    const tag = document.getElementById('call-mode-tag');
+    const btn = document.getElementById('call-mode-btn');
+    if (isAutoAnswer) {
+      tag.textContent = 'mode: [auto-answer]';
+      tag.className = 'status-tag active';
+      btn.textContent = '[switch to 1-ring mode]';
+    } else {
+      tag.textContent = 'mode: [1-ring trigger]';
+      tag.className = 'status-tag';
+      btn.textContent = '[switch to auto-answer]';
+    }
+  }
+
   function triggerSimulatedAlert() {
     const sample = `Rakshak Alert: Emergency assistance requested\n\nLive Sensors (5/5):\n• Pedometer: ${Math.floor(Math.random() * 50)} steps (0.03 km)\n• Light: ${Math.floor(Math.random() * 80 + 30)} lx\n• Accelerometer: ${(Math.random() * 1.5 + 9.2).toFixed(1)} m/s²\n• Gyroscope: ${(Math.random() * 0.5).toFixed(1)} rad/s\n• Magnetometer: ${Math.floor(Math.random() * 360)}° S`;
     
@@ -772,6 +866,15 @@ awaiting emergency trigger from client or gateway...</div>
         } else {
           tag.className = 'status-tag warn';
           tag.textContent = 'gateway: [disconnected]';
+        }
+        if (data.audio_bridge) {
+          updateAudioBridgeUI(data.audio_bridge);
+          if (data.audio_bridge.auto_answer_mode !== undefined) {
+            updateCallModeUI(data.audio_bridge.auto_answer_mode);
+          }
+        }
+        if (data.last_call_number) {
+          document.getElementById('last-call-num').textContent = data.last_call_number;
         }
       }
     } catch (e) {}

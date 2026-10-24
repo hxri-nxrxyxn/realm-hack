@@ -32,6 +32,11 @@ from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
 import websockets
 
+try:
+    from server.audio_bridge import AudioConversationBridge
+except ImportError:
+    from audio_bridge import AudioConversationBridge
+
 def get_local_ip():
     """Detect the local LAN / Wi-Fi IP address."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -107,6 +112,13 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "gateway_ips": phone_clients,
                 "last_call_number": self.server_instance.last_detected_number or "8714711540",
                 "telemetry_count": self.server_instance.telemetry_count,
+                "audio_bridge": {
+                    "running": self.server_instance.audio_bridge.is_running,
+                    "chunk_count": self.server_instance.audio_bridge.chunk_count,
+                    "last_status": self.server_instance.audio_bridge.last_status,
+                    "last_reply": self.server_instance.audio_bridge.last_ai_reply,
+                    "auto_answer_mode": self.server_instance.auto_answer_mode
+                },
                 "timestamp": format_timestamp()
             }
             body = json.dumps(status_data).encode("utf-8")
@@ -123,6 +135,29 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == "/api/trigger-call":
             self.server_instance.on_call_detected("+918714711540", name="Simulated Caller", state="active")
             body = b'{"success":true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path == "/api/audio-bridge/toggle":
+            if self.server_instance.audio_bridge.is_running:
+                self.server_instance.audio_bridge.stop()
+            else:
+                self.server_instance.audio_bridge.start()
+            status = {"running": self.server_instance.audio_bridge.is_running}
+            body = json.dumps(status).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path == "/api/audio-bridge/mode":
+            self.server_instance.auto_answer_mode = not self.server_instance.auto_answer_mode
+            status = {"auto_answer_mode": self.server_instance.auto_answer_mode}
+            body = json.dumps(status).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -168,6 +203,12 @@ class TelemetryServer:
         self.processed_msg_ids = set()
         self.map_session_path = None
         self.pending_call_trigger = None
+        self.auto_answer_mode = True  # Real-time voice AI conversation enabled
+        self.audio_bridge = AudioConversationBridge(on_event=self.on_audio_bridge_event)
+
+    def on_audio_bridge_event(self, event):
+        if self.loop:
+            asyncio.run_coroutine_threadsafe(self.broadcast(event), self.loop)
 
     def display_telemetry(self, raw_content: str, sender: str = "", source: str = "BLE / Bluetooth MAP"):
         """
@@ -287,15 +328,62 @@ class TelemetryServer:
             "timestamp": format_timestamp()
         }
 
-        # 1. 1-Ring Auto-Hangup: Terminate trigger call after ~400ms to immediately free cellular modem and clear caller InCallUI
-        self.auto_hangup_call(raw_path)
+        # 1. Real-Time Conversation Link: Auto-Answer call to establish Bluetooth Handsfree audio, or Hangup if in 1-ring mode
+        if self.auto_answer_mode:
+            self.auto_answer_call(raw_path)
+        else:
+            self.auto_hangup_call(raw_path)
 
-        # 2. Direct Bluetooth MAP SMS dispatch to caller to guarantee delivery even if Phone A app is asleep
+        # 2. Direct Bluetooth MAP SMS dispatch to caller to guarantee delivery and trigger client telemetry loop
         threading.Thread(target=self.push_sms_via_bluetooth_map, args=(clean_num, "received call. will get back to you shortly."), daemon=True).start()
 
         # 3. WebSocket broadcast to connected apps
         if self.loop:
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
+
+    def auto_answer_call(self, raw_path=""):
+        """Auto-answers incoming call so caller audio connects to Bluetooth Handsfree."""
+        def _answer():
+            time.sleep(0.5)  # 500ms allows 1 ring setup and caller ID capture
+            bus = dbus.SessionBus()
+            answered = False
+
+            # Strategy 1: Specific call path Answer()
+            if raw_path:
+                try:
+                    call_obj = bus.get_object(self.telephony_service, raw_path)
+                    for iface in ["org.pipewire.Telephony.Call1", "org.ofono.VoiceCall"]:
+                        try:
+                            c = dbus.Interface(call_obj, iface)
+                            c.Answer(timeout=2.0)
+                            answered = True
+                            print(f"[{format_timestamp()}] 📞 Call answered on {raw_path} via {iface}")
+                            break
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            # Strategy 2: VoiceCallManager.ReleaseAndAnswer / HoldAndAnswer
+            if not answered:
+                try:
+                    telephony = bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
+                    for iface in ["org.ofono.VoiceCallManager", "org.pipewire.Telephony.AudioGateway1"]:
+                        try:
+                            vcm = dbus.Interface(telephony, iface)
+                            vcm.ReleaseAndAnswer(timeout=2.0)
+                            answered = True
+                            print(f"[{format_timestamp()}] 📞 ReleaseAndAnswer executed via {iface}")
+                            break
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            print(f"[{format_timestamp()}] 🎙️ Call connected! Activating Real-Time AI Audio Conversation Bridge...")
+            self.audio_bridge.start()
+
+        threading.Thread(target=_answer, daemon=True).start()
 
     def auto_hangup_call(self, raw_path=""):
         """Terminates trigger call after 1 ring (< 0.5s) to release voice bearer and clear InCallUI on caller's phone."""
@@ -520,9 +608,20 @@ class TelemetryServer:
         except Exception:
             pass
 
+        def on_call_removed(path):
+            print(f"[{format_timestamp()}] 📴 Call ended ({path}). Pausing audio conversation bridge.")
+            self.audio_bridge.stop()
+
         bus.add_signal_receiver(
             on_call_added,
             signal_name="CallAdded",
+            dbus_interface="org.ofono.VoiceCallManager",
+            bus_name=self.telephony_service
+        )
+
+        bus.add_signal_receiver(
+            on_call_removed,
+            signal_name="CallRemoved",
             dbus_interface="org.ofono.VoiceCallManager",
             bus_name=self.telephony_service
         )
