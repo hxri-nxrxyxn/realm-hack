@@ -926,6 +926,13 @@ awaiting emergency trigger from client or gateway...</div>
         if (data.last_call_number) {
           document.getElementById('last-call-num').textContent = data.last_call_number;
         }
+        if (data.latest_telemetry && data.latest_telemetry.content) {
+          const t = data.latest_telemetry;
+          const currentText = (document.getElementById('raw-telemetry-box')?.textContent || '').trim();
+          if (currentText !== t.content.trim() || !lastTelemetryTimestamp || (t.update_count && t.update_count > telemetryUpdateCount)) {
+            updateTelemetryDisplay(t.content, t.sender ? `${t.sender} via ${t.source}` : t.source, t.update_count || data.telemetry_count);
+          }
+        }
       }
     } catch (e) {}
   }

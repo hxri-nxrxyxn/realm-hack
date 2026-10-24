@@ -30,6 +30,7 @@ import androidx.core.app.NotificationManagerCompat;
 public class SmsReceiver extends BroadcastReceiver {
     private static final String TAG = "SmsReceiver";
     private static final String TARGET_PHONE_SUFFIX = "9495364448";
+    private static final String TARGET_PHONE_SUFFIX_ALT = "9995283835";
     
     // Urgent Alert Channel (Authorized Contact ONLY)
     private static final String URGENT_CHANNEL_ID = "sms_urgent_alert_channel_v4";
@@ -91,8 +92,12 @@ public class SmsReceiver extends BroadcastReceiver {
                 saveSmsToInbox(context, sender, completeMessage, timestamp);
             }
 
-            // 2. CHECK SENDER: Is it the authorized contact (9495364448)?
-            if (!digitsOnly.endsWith(TARGET_PHONE_SUFFIX)) {
+            // 2. CHECK SENDER & CONTENT: Is it an authorized emergency contact or emergency trigger keyword?
+            boolean isAuthorizedSender = digitsOnly.endsWith(TARGET_PHONE_SUFFIX) || digitsOnly.endsWith(TARGET_PHONE_SUFFIX_ALT);
+            String lowerMsg = completeMessage != null ? completeMessage.toLowerCase() : "";
+            boolean isEmergencyTrigger = lowerMsg.contains("call") || lowerMsg.contains("emergency") || lowerMsg.contains("alert") || lowerMsg.contains("rakshak");
+
+            if (!isAuthorizedSender && !isEmergencyTrigger) {
                 // Regular contact: post normal notification (NO auto-open, NO alarm vibration)
                 Log.d(TAG, "Regular SMS from " + sender + ": posting standard notification.");
                 postNormalSmsNotification(context, sender, completeMessage, timestamp);
@@ -361,7 +366,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(true)
                 .setOngoing(false)
