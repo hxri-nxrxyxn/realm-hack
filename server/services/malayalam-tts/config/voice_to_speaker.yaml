@@ -1,4 +1,16 @@
-﻿tts-1:
+tts-1:
+  ml_IN-arjun-medium:
+    model: voices/piper/ml_IN-arjun-medium.onnx
+    speaker: 0
+  ml_IN-meera-medium:
+    model: voices/piper/ml_IN-meera-medium.onnx
+    speaker: 0
+  arjun:
+    model: voices/piper/ml_IN-arjun-medium.onnx
+    speaker: 0
+  meera:
+    model: voices/piper/ml_IN-meera-medium.onnx
+    speaker: 0
   some_other_voice_name_you_want:
     model: voices/choose your own model.onnx
     speaker: set your own speaker
