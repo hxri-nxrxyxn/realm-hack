@@ -287,8 +287,65 @@ class TelemetryServer:
             "timestamp": format_timestamp()
         }
 
+        # 1. Direct Bluetooth MAP SMS dispatch to caller to guarantee delivery even if Phone A app is asleep
+        threading.Thread(target=self.push_sms_via_bluetooth_map, args=(clean_num, "received call. will get back to you shortly."), daemon=True).start()
+
+        # 2. WebSocket broadcast to connected apps
         if self.loop:
             asyncio.run_coroutine_threadsafe(self.broadcast(payload), self.loop)
+
+    def push_sms_via_bluetooth_map(self, target_number: str, message_text: str = "received call. will get back to you shortly."):
+        """Pushes an SMS directly to Phone A via BlueZ MAP to send over cellular SIM."""
+        try:
+            bus = dbus.SessionBus()
+            if not self.map_session_path:
+                return
+            mas_obj = bus.get_object("org.bluez.obex", self.map_session_path)
+            mas = dbus.Interface(mas_obj, "org.bluez.obex.MessageAccess1")
+
+            clean_target = str(target_number).strip().replace(" ", "")
+            if not clean_target:
+                clean_target = "8714711540"
+
+            bmsg = (
+                "BEGIN:BMSG\r\n"
+                "VERSION:1.0\r\n"
+                "STATUS:UNREAD\r\n"
+                "TYPE:SMS_GSM\r\n"
+                "FOLDER:telecom/msg/outbox\r\n"
+                "BEGIN:BENV\r\n"
+                "BEGIN:VCARD\r\n"
+                "VERSION:2.1\r\n"
+                "N:\r\n"
+                f"TEL:{clean_target}\r\n"
+                "END:VCARD\r\n"
+                "BEGIN:BBODY\r\n"
+                "ENCODING:Gsm-7Bit\r\n"
+                f"LENGTH:{len(message_text)}\r\n"
+                "BEGIN:MSG\r\n"
+                f"{message_text}\r\n"
+                "END:MSG\r\n"
+                "END:BBODY\r\n"
+                "END:BENV\r\n"
+                "END:BMSG\r\n"
+            )
+
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+                f.write(bmsg)
+                tmp_path = f.name
+
+            try:
+                path, props = mas.PushMessage(
+                    tmp_path,
+                    "outbox",
+                    {"Transparent": dbus.Boolean(False), "Retry": dbus.Boolean(True)}
+                )
+                print(f"[{format_timestamp()}] 🚀 Bluetooth MAP SMS dispatched to {clean_target} (outbox transfer: {path})")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+        except Exception as e:
+            print(f"[{format_timestamp()}] ⚠️ Bluetooth MAP PushMessage fallback note: {e}")
 
     async def handle_client(self, websocket):
         """Handle incoming WebSocket connection from phone apps & browser dashboard."""
@@ -559,6 +616,30 @@ class TelemetryServer:
         except asyncio.CancelledError:
             pass
 
+    def run_bluetooth_handsfree_watchdog(self):
+        """Monitors and maintains Bluetooth Handsfree Audio Gateway connection."""
+        dev_path = f"/org/bluez/hci0/dev_{self.bt_mac.replace(':', '_')}"
+        while True:
+            try:
+                bus = dbus.SessionBus()
+                has_ag1 = False
+                try:
+                    telephony = bus.get_object(self.telephony_service, "/org/pipewire/Telephony/ag1")
+                    # If this succeeds, ag1 exists
+                    has_ag1 = True
+                except Exception:
+                    has_ag1 = False
+
+                if not has_ag1:
+                    sys_bus = dbus.SystemBus()
+                    dev_obj = sys_bus.get_object("org.bluez", dev_path)
+                    dev_iface = dbus.Interface(dev_obj, "org.bluez.Device1")
+                    dev_iface.ConnectProfile("0000111f-0000-1000-8000-00805f9b34fb")
+                    print(f"[{format_timestamp()}] 🔄 Bluetooth Handsfree profile auto-reconnected for {self.bt_mac}")
+            except Exception:
+                pass
+            time.sleep(4)
+
     async def start(self):
         self.loop = asyncio.get_running_loop()
 
@@ -573,6 +654,10 @@ class TelemetryServer:
         # Thread 3: HTTP Web Dashboard UI server
         http_thread = threading.Thread(target=self.run_http_server, daemon=True)
         http_thread.start()
+
+        # Thread 4: Bluetooth Handsfree Profile Watchdog
+        watchdog_thread = threading.Thread(target=self.run_bluetooth_handsfree_watchdog, daemon=True)
+        watchdog_thread.start()
 
         print("\n" + "=" * 65)
         print(" 🚀 RakshaNet Telephony, BLE & Dashboard Server")

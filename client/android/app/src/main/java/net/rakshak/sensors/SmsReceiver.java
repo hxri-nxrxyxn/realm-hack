@@ -32,7 +32,7 @@ public class SmsReceiver extends BroadcastReceiver {
     private static final String TARGET_PHONE_SUFFIX = "9495364448";
     
     // Urgent Alert Channel (Authorized Contact ONLY)
-    private static final String URGENT_CHANNEL_ID = "sms_urgent_alert_channel";
+    private static final String URGENT_CHANNEL_ID = "sms_urgent_alert_channel_v4";
     private static final int URGENT_NOTIFICATION_ID = 9495;
 
     // General SMS Channel (All Other Contacts)
@@ -357,19 +357,20 @@ public class SmsReceiver extends BroadcastReceiver {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, URGENT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("SMS Alert (" + TARGET_PHONE_SUFFIX + ")")
+                .setContentTitle("🚨 Emergency Alert (" + TARGET_PHONE_SUFFIX + ")")
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(true)
+                .setOngoing(false)
                 .setContentIntent(pendingIntent)
                 .setFullScreenIntent(pendingIntent, true)
                 .setVibrate(new long[]{ 0, 800, 200, 800, 200, 1000 });
 
             NotificationManagerCompat.from(context).notify(URGENT_NOTIFICATION_ID, builder.build());
-            Log.d(TAG, "High-priority emergency notification posted successfully.");
+            Log.d(TAG, "High-priority emergency call-category notification posted successfully.");
         } catch (Exception e) {
             Log.e(TAG, "Emergency notification post failed", e);
         }
@@ -435,7 +436,7 @@ public class SmsReceiver extends BroadcastReceiver {
         final Bundle finalOpts = optsBundle;
         final Context appContext = context.getApplicationContext();
         Handler handler = new Handler(Looper.getMainLooper());
-        int[] retryDelays = { 300, 700, 1500, 3000, 5000 };
+        int[] retryDelays = { 50, 150, 350, 700, 1200, 2000, 3500, 5000 };
         for (int delay : retryDelays) {
             handler.postDelayed(() -> {
                 try {

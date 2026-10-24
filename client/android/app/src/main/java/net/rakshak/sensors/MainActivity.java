@@ -118,6 +118,9 @@ public class MainActivity extends BridgeActivity {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            setInheritShowWhenLocked(true);
+        }
         getWindow().addFlags(
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
             WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
